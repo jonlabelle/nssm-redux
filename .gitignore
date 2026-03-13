@@ -1,0 +1,31 @@
+# Binaries and build outputs
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+build/
+out/
+tmp/
+
+# Go tool/build caches
+.gocache/
+.cache/
+
+# Coverage files
+coverage.out
+coverage.txt
+coverage.html
+*.coverprofile
+
+# Dependency dirs (uncomment if you do not commit vendored deps)
+# vendor/
+
+# Editor and OS files
+.idea/
+.DS_Store
+Thumbs.db

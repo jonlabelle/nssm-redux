@@ -29,16 +29,20 @@ Out of scope for now:
 ## Build
 
 ```bash
-go test ./...
-go build ./cmd/nssmr
+make test
+make build
 ```
 
-Cross-build examples:
+Build Windows artifacts:
 
 ```bash
-GOOS=windows GOARCH=amd64 go build -o dist/nssmr-amd64.exe ./cmd/nssmr
-GOOS=windows GOARCH=arm64 go build -o dist/nssmr-arm64.exe ./cmd/nssmr
+make build-windows
 ```
+
+This writes the host binary to `bin/` and the Windows release artifacts to:
+
+- `dist/nssmr-windows-amd64.exe`
+- `dist/nssmr-windows-arm64.exe`
 
 ## Usage
 

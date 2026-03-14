@@ -32,3 +32,27 @@ func TestUsageOnUnknownCommand(t *testing.T) {
 		t.Fatalf("Run(bogus) error = %v, want unknown command", err)
 	}
 }
+
+func TestHelpIncludesStructuredExamples(t *testing.T) {
+	t.Parallel()
+
+	var stdout bytes.Buffer
+	if err := Run(context.Background(), []string{"help"}, &stdout, &stdout); err != nil {
+		t.Fatalf("Run(help) error = %v", err)
+	}
+
+	got := stdout.String()
+	for _, want := range []string{
+		"Usage:",
+		"Commands:",
+		"Notes:",
+		"Examples:",
+		`nssmr install MyService "C:\apps\worker.exe" --config "C:\apps\worker.yml"`,
+		`nssmr set MyService AppEvents Start/Pre "C:\hooks\before-start.cmd"`,
+		`nssmr dump MyService CloneService`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("help output missing %q\noutput:\n%s", want, got)
+		}
+	}
+}

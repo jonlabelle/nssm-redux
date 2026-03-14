@@ -316,7 +316,9 @@ func usageError(message string) error {
 	return fmt.Errorf("%s\n\n%s", message, usageText)
 }
 
-const usageText = `usage:
+const usageText = `nssmr manages Windows services that wrap an existing executable.
+
+Usage:
   nssmr install <service> <application> [arguments...]
   nssmr remove <service>
   nssmr start|stop|restart|pause|continue|rotate <service>
@@ -325,7 +327,32 @@ const usageText = `usage:
   nssmr processes <service> [service...]
   nssmr get <service> <setting> [additional]
   nssmr set <service> <setting> [additional] [value...]
-  nssmr reset <service> <setting> [additional]
+  nssmr reset|unset <service> <setting> [additional]
   nssmr dump <service> [new-service-name]
   nssmr service <service>
-  nssmr version`
+  nssmr version
+  nssmr help
+
+Commands:
+  install/remove    Create or delete a managed service.
+  start/stop/...    Control a service through the Windows SCM.
+  status/list/...   Inspect service state, process trees, or exported config.
+  get/set/reset     Read or update NSSM-compatible settings.
+  dump              Emit commands that recreate the current configuration.
+  service           Internal SCM entrypoint used by installed services.
+
+Notes:
+  install stores everything after <application> as AppParameters.
+  AppExit and AppEvents require an [additional] key such as Default, 2, or Start/Pre.
+  Quote paths with spaces and any argument your shell would otherwise split.
+
+Examples:
+  nssmr install MyService "C:\apps\worker.exe" --config "C:\apps\worker.yml"
+  nssmr set MyService AppDirectory "C:\apps"
+  nssmr set MyService AppStdout "C:\logs\worker.out.log"
+  nssmr set MyService AppEnvironment "ENV=prod" "PORT=8080"
+  nssmr set MyService AppEvents Start/Pre "C:\hooks\before-start.cmd"
+  nssmr set MyService Start SERVICE_DELAYED_AUTO_START
+  nssmr start MyService
+  nssmr get MyService AppParameters
+  nssmr dump MyService CloneService`

@@ -4,6 +4,8 @@ package runtime
 
 import (
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 	"unsafe"
@@ -32,8 +34,11 @@ var (
 	procSetConsoleCtrlHandler  = kernel32Proc.NewProc("SetConsoleCtrlHandler")
 	procGetProcessAffinityMask = kernel32Proc.NewProc("GetProcessAffinityMask")
 	procSetProcessAffinityMask = kernel32Proc.NewProc("SetProcessAffinityMask")
+	procEnumWindows            = user32Proc.NewProc("EnumWindows")
 	procPostMessageW           = user32Proc.NewProc("PostMessageW")
 	procPostThreadMessageW     = user32Proc.NewProc("PostThreadMessageW")
+	windowSignalStates         sync.Map
+	nextWindowSignalStateID    atomic.Uintptr
 )
 
 // Stop attempts the legacy NSSM stop sequence and reports whether the process
@@ -212,8 +217,14 @@ func sendConsoleCtrlC(pid uint32) (bool, error) {
 
 func postWindowClose(pid uint32) (bool, error) {
 	state := &windowSignalState{pid: pid}
+	stateID := registerWindowSignalState(state)
+	defer unregisterWindowSignalState(stateID)
+
 	callback := syscall.NewCallback(func(hwnd, param uintptr) uintptr {
-		state := (*windowSignalState)(unsafe.Pointer(param))
+		state, ok := lookupWindowSignalState(param)
+		if !ok {
+			return 1
+		}
 		var windowPID uint32
 		if _, err := windows.GetWindowThreadProcessId(windows.HWND(hwnd), &windowPID); err == nil && windowPID == state.pid {
 			if err := postMessage(windows.HWND(hwnd), wmClose, 0, 0); err == nil {
@@ -226,7 +237,7 @@ func postWindowClose(pid uint32) (bool, error) {
 		return 1
 	})
 
-	if err := windows.EnumWindows(callback, unsafe.Pointer(state)); err != nil {
+	if err := enumWindows(callback, stateID); err != nil {
 		return state.signaled, err
 	}
 	return state.signaled, nil
@@ -306,6 +317,36 @@ func getProcessAffinityMask(handle windows.Handle) (uintptr, uintptr, error) {
 func setProcessAffinityMask(handle windows.Handle, mask uintptr) error {
 	r1, _, err := procSetProcessAffinityMask.Call(uintptr(handle), mask)
 	if r1 == 0 {
+		return err
+	}
+	return nil
+}
+
+func registerWindowSignalState(state *windowSignalState) uintptr {
+	id := nextWindowSignalStateID.Add(1)
+	windowSignalStates.Store(id, state)
+	return id
+}
+
+func unregisterWindowSignalState(id uintptr) {
+	windowSignalStates.Delete(id)
+}
+
+func lookupWindowSignalState(id uintptr) (*windowSignalState, bool) {
+	value, ok := windowSignalStates.Load(id)
+	if !ok {
+		return nil, false
+	}
+	state, ok := value.(*windowSignalState)
+	if !ok {
+		return nil, false
+	}
+	return state, true
+}
+
+func enumWindows(callback, param uintptr) error {
+	r1, _, err := procEnumWindows.Call(callback, param)
+	if r1 == 0 && err != windows.ERROR_SUCCESS {
 		return err
 	}
 	return nil

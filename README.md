@@ -10,23 +10,21 @@ This repository is intentionally starting with a strong CLI and service-runtime 
 
 Implemented in this first port slice:
 
-- Install, remove, start, stop, restart, status, list, get, set, reset, and dump commands
+- Install, remove, start, stop, restart, pause, continue, rotate, status, list, processes, get, set, reset, and dump commands
 - Windows service hosting through `golang.org/x/sys/windows/svc`
 - Registry-backed managed-service settings compatible with the original `Parameters` layout
 - Restart policy with `AppExit`, `AppRestartDelay`, and `AppThrottle`
 - `AppEnvironment` replacement plus `AppEnvironmentExtra` merging
 - `AppDirectory`, `AppParameters`, `AppStdin`, `AppStdout`, `AppStderr`, `AppNoConsole`, and `AppKillProcessTree`
 - `AppPriority`, `AppAffinity`, and the legacy `AppStopMethod*` stop controls
-- Native service metadata updates for display name, description, startup type, and dependencies
+- Hook events under `AppEvents`
+- Output rotation plus timestamped log streaming through the `AppRotate*` and `AppTimestampLog` settings
+- Native service metadata updates for display name, description, startup type, dependencies, and service account
 - Tagged GitHub Actions releases for `windows/amd64` and `windows/arm64`
 
-Not yet ported:
+Out of scope for now:
 
-- GUI installer/editor
-- Hook events
-- Log rotation and timestamped log streaming
-- Service account management
-- Process tree inspection and pause/continue controls
+- Legacy GUI installer/editor
 
 ## Build
 
@@ -57,9 +55,14 @@ nssmr set MyService AppDirectory "C:\apps"
 nssmr set MyService AppStdout "C:\logs\worker.out.log"
 nssmr set MyService AppStderr "C:\logs\worker.err.log"
 nssmr set MyService AppEnvironment "ENV=prod" "PORT=8080"
+nssmr set MyService AppEvents Start/Pre "C:\hooks\before-start.cmd"
+nssmr set MyService AppRotateFiles 1
+nssmr set MyService AppRotateOnline 1
+nssmr set MyService AppTimestampLog 1
 nssmr set MyService AppPriority ABOVE_NORMAL_PRIORITY_CLASS
 nssmr set MyService AppAffinity 0-3
 nssmr set MyService AppStopMethodSkip 0
+nssmr set MyService ObjectName "NT AUTHORITY\LocalService"
 nssmr set MyService Start SERVICE_DELAYED_AUTO_START
 ```
 
@@ -67,6 +70,8 @@ Inspect or export configuration:
 
 ```bash
 nssmr get MyService AppParameters
+nssmr processes MyService
+nssmr rotate MyService
 nssmr dump MyService
 ```
 

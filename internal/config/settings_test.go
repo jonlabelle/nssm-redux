@@ -23,6 +23,21 @@ func TestApplyAndRead(t *testing.T) {
 	if err := Apply(&service, SettingAppStopMethodSkip, "", []string{"3"}, false); err != nil {
 		t.Fatalf("Apply(AppStopMethodSkip) error = %v", err)
 	}
+	if err := Apply(&service, SettingAppEvents, "Start/Pre", []string{`C:\hooks\pre.cmd`}, false); err != nil {
+		t.Fatalf("Apply(AppEvents) error = %v", err)
+	}
+	if err := Apply(&service, SettingAppRotateFiles, "", []string{"1"}, false); err != nil {
+		t.Fatalf("Apply(AppRotateFiles) error = %v", err)
+	}
+	if err := Apply(&service, SettingAppRotateSeconds, "", []string{"60"}, false); err != nil {
+		t.Fatalf("Apply(AppRotateSeconds) error = %v", err)
+	}
+	if err := Apply(&service, SettingAppRotateBytes, "", []string{"1024"}, false); err != nil {
+		t.Fatalf("Apply(AppRotateBytes) error = %v", err)
+	}
+	if err := Apply(&service, SettingAppTimestampLog, "", []string{"1"}, false); err != nil {
+		t.Fatalf("Apply(AppTimestampLog) error = %v", err)
+	}
 
 	values, err := Read(service, SettingAppRestartDelay, "")
 	if err != nil {
@@ -62,6 +77,46 @@ func TestApplyAndRead(t *testing.T) {
 	}
 	if len(values) != 1 || values[0] != "3" {
 		t.Fatalf("Read(AppStopMethodSkip) = %#v, want [3]", values)
+	}
+
+	values, err = Read(service, SettingAppEvents, "Start/Pre")
+	if err != nil {
+		t.Fatalf("Read(AppEvents) error = %v", err)
+	}
+	if len(values) != 1 || values[0] != `C:\hooks\pre.cmd` {
+		t.Fatalf("Read(AppEvents) = %#v, want [C:\\hooks\\pre.cmd]", values)
+	}
+
+	values, err = Read(service, SettingAppRotateFiles, "")
+	if err != nil {
+		t.Fatalf("Read(AppRotateFiles) error = %v", err)
+	}
+	if len(values) != 1 || values[0] != "1" {
+		t.Fatalf("Read(AppRotateFiles) = %#v, want [1]", values)
+	}
+
+	values, err = Read(service, SettingAppRotateSeconds, "")
+	if err != nil {
+		t.Fatalf("Read(AppRotateSeconds) error = %v", err)
+	}
+	if len(values) != 1 || values[0] != "60" {
+		t.Fatalf("Read(AppRotateSeconds) = %#v, want [60]", values)
+	}
+
+	values, err = Read(service, SettingAppRotateBytes, "")
+	if err != nil {
+		t.Fatalf("Read(AppRotateBytes) error = %v", err)
+	}
+	if len(values) != 1 || values[0] != "1024" {
+		t.Fatalf("Read(AppRotateBytes) = %#v, want [1024]", values)
+	}
+
+	values, err = Read(service, SettingAppTimestampLog, "")
+	if err != nil {
+		t.Fatalf("Read(AppTimestampLog) error = %v", err)
+	}
+	if len(values) != 1 || values[0] != "1" {
+		t.Fatalf("Read(AppTimestampLog) = %#v, want [1]", values)
 	}
 }
 

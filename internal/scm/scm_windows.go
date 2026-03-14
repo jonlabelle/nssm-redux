@@ -389,6 +389,30 @@ func saveParameters(service config.Service) error {
 	if err := setMilliseconds(key, string(config.SettingAppStopMethodThreads), service.StopThreadsDelay, 1500*time.Millisecond); err != nil {
 		return err
 	}
+	if err := saveHooks(service); err != nil {
+		return err
+	}
+	if err := setDefaultedBool(key, string(config.SettingAppRotateFiles), service.Logging.Enabled, false); err != nil {
+		return err
+	}
+	if err := setDefaultedBool(key, string(config.SettingAppRotateOnline), service.Logging.Online, false); err != nil {
+		return err
+	}
+	if err := setSeconds(key, string(config.SettingAppRotateSeconds), service.Logging.AgeThreshold, 0); err != nil {
+		return err
+	}
+	if err := setDefaultedDWord(key, string(config.SettingAppRotateBytes), service.Logging.SizeLow(), 0); err != nil {
+		return err
+	}
+	if err := setDefaultedDWord(key, string(config.SettingAppRotateBytesHigh), service.Logging.SizeHigh(), 0); err != nil {
+		return err
+	}
+	if err := setMilliseconds(key, string(config.SettingAppRotateDelay), service.Logging.RotateDelay, 0); err != nil {
+		return err
+	}
+	if err := setDefaultedBool(key, string(config.SettingAppTimestampLog), service.Logging.TimestampLog, false); err != nil {
+		return err
+	}
 	if err := setDefaultedBool(key, string(config.SettingAppNoConsole), service.NoConsole, false); err != nil {
 		return err
 	}
@@ -437,9 +461,19 @@ func loadParameters(service *config.Service) error {
 	service.StopConsoleDelay = getMillisecondsValue(key, string(config.SettingAppStopMethodConsole), 1500*time.Millisecond)
 	service.StopWindowDelay = getMillisecondsValue(key, string(config.SettingAppStopMethodWindow), 1500*time.Millisecond)
 	service.StopThreadsDelay = getMillisecondsValue(key, string(config.SettingAppStopMethodThreads), 1500*time.Millisecond)
+	service.Logging.Enabled = getBoolValue(key, string(config.SettingAppRotateFiles), false)
+	service.Logging.Online = getBoolValue(key, string(config.SettingAppRotateOnline), false)
+	service.Logging.AgeThreshold = getSecondsValue(key, string(config.SettingAppRotateSeconds), 0)
+	service.Logging.SizeBytes = uint64(getDWordValue(key, string(config.SettingAppRotateBytes), 0))
+	service.Logging.SizeBytes |= uint64(getDWordValue(key, string(config.SettingAppRotateBytesHigh), 0)) << 32
+	service.Logging.RotateDelay = getMillisecondsValue(key, string(config.SettingAppRotateDelay), 0)
+	service.Logging.TimestampLog = getBoolValue(key, string(config.SettingAppTimestampLog), false)
 	service.NoConsole = getBoolValue(key, string(config.SettingAppNoConsole), false)
 	service.KillProcessTree = getBoolValue(key, string(config.SettingAppKillProcessTree), true)
 
+	if err := loadHooks(service); err != nil {
+		return err
+	}
 	if err := loadExitActions(service); err != nil {
 		return err
 	}
@@ -550,6 +584,10 @@ func exitActionsKeyPath(name string) string {
 	return parametersKeyPath(name) + `\` + string(config.SettingAppExit)
 }
 
+func hooksKeyPath(name string) string {
+	return parametersKeyPath(name) + `\` + string(config.SettingAppEvents)
+}
+
 func deleteTree(root registry.Key, path string) error {
 	key, err := registry.OpenKey(root, path, registry.ENUMERATE_SUB_KEYS|registry.QUERY_VALUE)
 	if err != nil {
@@ -642,6 +680,19 @@ func setMilliseconds(key registry.Key, name string, value, defaultValue time.Dur
 	return nil
 }
 
+func setSeconds(key registry.Key, name string, value, defaultValue time.Duration) error {
+	if value == defaultValue {
+		return deleteValueIfExists(key, name)
+	}
+	if value < 0 || value > time.Duration(math.MaxUint32)*time.Second {
+		return fmt.Errorf("%s is out of range", name)
+	}
+	if err := key.SetDWordValue(name, uint32(value/time.Second)); err != nil {
+		return fmt.Errorf("write %s: %w", name, err)
+	}
+	return nil
+}
+
 func setDefaultedBool(key registry.Key, name string, value, defaultValue bool) error {
 	if value == defaultValue {
 		return deleteValueIfExists(key, name)
@@ -688,12 +739,28 @@ func getMillisecondsValue(key registry.Key, name string, defaultValue time.Durat
 	return time.Duration(value) * time.Millisecond
 }
 
+func getSecondsValue(key registry.Key, name string, defaultValue time.Duration) time.Duration {
+	value, _, err := key.GetIntegerValue(name)
+	if err != nil {
+		return defaultValue
+	}
+	return time.Duration(value) * time.Second
+}
+
 func getBoolValue(key registry.Key, name string, defaultValue bool) bool {
 	value, _, err := key.GetIntegerValue(name)
 	if err != nil {
 		return defaultValue
 	}
 	return value != 0
+}
+
+func getDWordValue(key registry.Key, name string, defaultValue uint32) uint32 {
+	value, _, err := key.GetIntegerValue(name)
+	if err != nil {
+		return defaultValue
+	}
+	return uint32(value)
 }
 
 func getPriorityValue(key registry.Key, name string, defaultValue config.PriorityClass) config.PriorityClass {
@@ -730,6 +797,62 @@ func getStopMethodValue(key registry.Key, name string, defaultValue config.StopM
 		return defaultValue
 	}
 	return mask
+}
+
+func saveHooks(service config.Service) error {
+	path := hooksKeyPath(service.Name)
+	if err := deleteTree(registry.LOCAL_MACHINE, path); err != nil {
+		return err
+	}
+	if len(service.Hooks) == 0 {
+		return nil
+	}
+
+	for _, hook := range config.SupportedHooks() {
+		command, ok := service.Hooks[hook]
+		if !ok || strings.TrimSpace(command) == "" {
+			continue
+		}
+
+		info := hook.Info()
+		key, _, err := registry.CreateKey(registry.LOCAL_MACHINE, path+`\`+info.Event, registry.SET_VALUE)
+		if err != nil {
+			return fmt.Errorf("open hook registry: %w", err)
+		}
+		if err := key.SetExpandStringValue(info.Action, command); err != nil {
+			key.Close()
+			return fmt.Errorf("write hook %s: %w", hook, err)
+		}
+		key.Close()
+	}
+	return nil
+}
+
+func loadHooks(service *config.Service) error {
+	service.Hooks = make(map[config.Hook]string)
+
+	for _, hook := range config.SupportedHooks() {
+		info := hook.Info()
+		key, err := registry.OpenKey(registry.LOCAL_MACHINE, hooksKeyPath(service.Name)+`\`+info.Event, registry.QUERY_VALUE)
+		if err != nil {
+			if err == registry.ErrNotExist {
+				continue
+			}
+			return fmt.Errorf("open hook registry: %w", err)
+		}
+		value, _, err := key.GetStringValue(info.Action)
+		key.Close()
+		if err != nil {
+			if err == registry.ErrNotExist {
+				continue
+			}
+			return fmt.Errorf("read hook %s: %w", hook, err)
+		}
+		if strings.TrimSpace(value) != "" {
+			service.Hooks[hook] = value
+		}
+	}
+	return nil
 }
 
 func parseExitAction(raw string) (config.ExitAction, error) {

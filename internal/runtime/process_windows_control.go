@@ -132,6 +132,14 @@ func (p *Process) Stop() (bool, error) {
 	return false, joinRuntimeError(warnErr, p.waitForCompletion())
 }
 
+// Rotate requests online log rotation when AppRotateOnline is enabled.
+func (p *Process) Rotate() error {
+	if p == nil || p.logs == nil {
+		return fmt.Errorf("rotation is not configured")
+	}
+	return p.logs.Rotate()
+}
+
 func (p *Process) waitForCompletion() error {
 	if p == nil || p.done == nil {
 		return nil

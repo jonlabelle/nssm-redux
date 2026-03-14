@@ -24,6 +24,19 @@ type ServiceStatus struct {
 	ServiceSpecificExitCode uint32
 }
 
+type ProcessNode struct {
+	PID       uint32
+	ParentPID uint32
+	Depth     int
+	ImagePath string
+}
+
+type ProcessTree struct {
+	Service   string
+	ProcessID uint32
+	Nodes     []ProcessNode
+}
+
 func Install(_ string, _ config.Service) error {
 	return ErrUnsupported
 }
@@ -52,10 +65,43 @@ func Restart(_ string) error {
 	return ErrUnsupported
 }
 
+func Pause(_ string) error {
+	return ErrUnsupported
+}
+
+func Continue(_ string) error {
+	return ErrUnsupported
+}
+
+func Rotate(_ string) error {
+	return ErrUnsupported
+}
+
 func Query(_ string) (ServiceStatus, error) {
 	return ServiceStatus{}, ErrUnsupported
 }
 
 func ListManaged() ([]string, error) {
 	return nil, ErrUnsupported
+}
+
+func GetObjectName(_ string) (string, error) {
+	return "", ErrUnsupported
+}
+
+func SetObjectName(_, _, _ string) error {
+	return ErrUnsupported
+}
+
+func ResetObjectName(_ string) error {
+	return ErrUnsupported
+}
+
+func ProcessTreeForService(_ string) (ProcessTree, error) {
+	return ProcessTree{}, ErrUnsupported
+}
+
+func FormatProcessTree(tree ProcessTree) []string {
+	_ = tree
+	return nil
 }

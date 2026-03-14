@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"math"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -27,6 +28,14 @@ const (
 	SettingAppStopMethodConsole Setting = "AppStopMethodConsole"
 	SettingAppStopMethodWindow  Setting = "AppStopMethodWindow"
 	SettingAppStopMethodThreads Setting = "AppStopMethodThreads"
+	SettingAppEvents            Setting = "AppEvents"
+	SettingAppRotateFiles       Setting = "AppRotateFiles"
+	SettingAppRotateOnline      Setting = "AppRotateOnline"
+	SettingAppRotateSeconds     Setting = "AppRotateSeconds"
+	SettingAppRotateBytes       Setting = "AppRotateBytes"
+	SettingAppRotateBytesHigh   Setting = "AppRotateBytesHigh"
+	SettingAppRotateDelay       Setting = "AppRotateDelay"
+	SettingAppTimestampLog      Setting = "AppTimestampLog"
 	SettingAppStdin             Setting = "AppStdin"
 	SettingAppStdout            Setting = "AppStdout"
 	SettingAppStderr            Setting = "AppStderr"
@@ -60,6 +69,14 @@ var settingSpecs = []SettingSpec{
 	{Name: SettingAppStopMethodConsole},
 	{Name: SettingAppStopMethodWindow},
 	{Name: SettingAppStopMethodThreads},
+	{Name: SettingAppEvents, AdditionalMandatory: true},
+	{Name: SettingAppRotateFiles},
+	{Name: SettingAppRotateOnline},
+	{Name: SettingAppRotateSeconds},
+	{Name: SettingAppRotateBytes},
+	{Name: SettingAppRotateBytesHigh},
+	{Name: SettingAppRotateDelay},
+	{Name: SettingAppTimestampLog},
 	{Name: SettingAppStdin},
 	{Name: SettingAppStdout},
 	{Name: SettingAppStderr},
@@ -238,6 +255,91 @@ func Apply(service *Service, setting Setting, additional string, values []string
 		service.StopThreadsDelay = d
 		return nil
 
+	case SettingAppEvents:
+		hook, err := ParseHook(additional)
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		if reset {
+			delete(service.Hooks, hook)
+			return nil
+		}
+		command := singleValue(values)
+		if strings.TrimSpace(command) == "" {
+			return fmt.Errorf("parse %s: value is required", setting)
+		}
+		if service.Hooks == nil {
+			service.Hooks = make(map[Hook]string)
+		}
+		service.Hooks[hook] = command
+		return nil
+
+	case SettingAppRotateFiles:
+		if reset {
+			service.Logging.Enabled = defaults.Logging.Enabled
+			return nil
+		}
+		b, err := parseBoolValue(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.Logging.Enabled = b
+		return nil
+
+	case SettingAppRotateOnline:
+		if reset {
+			service.Logging.Online = defaults.Logging.Online
+			return nil
+		}
+		b, err := parseBoolValue(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.Logging.Online = b
+		return nil
+
+	case SettingAppRotateSeconds:
+		if reset {
+			service.Logging.AgeThreshold = defaults.Logging.AgeThreshold
+			return nil
+		}
+		d, err := parseRotationSeconds(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.Logging.AgeThreshold = d
+		return nil
+
+	case SettingAppRotateBytes:
+		return applyRotateBytesSetting(service, values, reset, false)
+
+	case SettingAppRotateBytesHigh:
+		return applyRotateBytesSetting(service, values, reset, true)
+
+	case SettingAppRotateDelay:
+		if reset {
+			service.Logging.RotateDelay = defaults.Logging.RotateDelay
+			return nil
+		}
+		d, err := parseDurationValue(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.Logging.RotateDelay = d
+		return nil
+
+	case SettingAppTimestampLog:
+		if reset {
+			service.Logging.TimestampLog = defaults.Logging.TimestampLog
+			return nil
+		}
+		b, err := parseBoolValue(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.Logging.TimestampLog = b
+		return nil
+
 	case SettingAppStdin:
 		if reset {
 			service.StdinPath = ""
@@ -357,6 +459,26 @@ func Read(service Service, setting Setting, additional string) ([]string, error)
 		return []string{Milliseconds(service.StopWindowDelay)}, nil
 	case SettingAppStopMethodThreads:
 		return []string{Milliseconds(service.StopThreadsDelay)}, nil
+	case SettingAppEvents:
+		hook, err := ParseHook(additional)
+		if err != nil {
+			return nil, err
+		}
+		return []string{service.Hooks[hook]}, nil
+	case SettingAppRotateFiles:
+		return []string{boolString(service.Logging.Enabled)}, nil
+	case SettingAppRotateOnline:
+		return []string{boolString(service.Logging.Online)}, nil
+	case SettingAppRotateSeconds:
+		return []string{strconv.FormatInt(int64(service.Logging.AgeThreshold/time.Second), 10)}, nil
+	case SettingAppRotateBytes:
+		return []string{strconv.FormatUint(uint64(service.Logging.SizeLow()), 10)}, nil
+	case SettingAppRotateBytesHigh:
+		return []string{strconv.FormatUint(uint64(service.Logging.SizeHigh()), 10)}, nil
+	case SettingAppRotateDelay:
+		return []string{Milliseconds(service.Logging.RotateDelay)}, nil
+	case SettingAppTimestampLog:
+		return []string{boolString(service.Logging.TimestampLog)}, nil
 	case SettingAppStdin:
 		return []string{service.StdinPath}, nil
 	case SettingAppStdout:
@@ -497,6 +619,31 @@ func parseStopMethodSkip(raw string) (StopMethodSkip, error) {
 		return 0, fmt.Errorf("unsupported stop method skip mask %#x", value)
 	}
 	return mask, nil
+}
+
+func applyRotateBytesSetting(service *Service, values []string, reset bool, high bool) error {
+	if reset {
+		if high {
+			service.Logging.SizeBytes &= math.MaxUint32
+		} else {
+			service.Logging.SizeBytes &= ^uint64(math.MaxUint32)
+		}
+		return nil
+	}
+
+	value, err := strconv.ParseUint(strings.TrimSpace(singleValue(values)), 0, 32)
+	if err != nil {
+		return fmt.Errorf("parse rotation bytes: %w", err)
+	}
+
+	if high {
+		service.Logging.SizeBytes &= math.MaxUint32
+		service.Logging.SizeBytes |= uint64(value) << 32
+	} else {
+		service.Logging.SizeBytes &= ^uint64(math.MaxUint32)
+		service.Logging.SizeBytes |= value
+	}
+	return nil
 }
 
 func singleValue(values []string) string {

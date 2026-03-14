@@ -37,6 +37,7 @@ type Process struct {
 	done    chan Result
 	job     windows.Handle
 	jobMu   sync.Mutex
+	logs    *logManager
 	service config.Service
 	started time.Time
 }
@@ -77,7 +78,7 @@ func Start(service config.Service, logger Logger) (*Process, error) {
 		CmdLine:       buildCommandLine(exe, service.Arguments),
 	}
 
-	files, err := attachIO(cmd, service, dir)
+	files, logs, err := attachIO(cmd, service, dir)
 	if err != nil {
 		return nil, err
 	}
@@ -86,11 +87,15 @@ func Start(service config.Service, logger Logger) (*Process, error) {
 	process := &Process{
 		cmd:     cmd,
 		done:    make(chan Result, 1),
+		logs:    logs,
 		service: service.Clone(),
 		started: time.Now(),
 	}
 
 	if err := cmd.Start(); err != nil {
+		if logs != nil {
+			_ = logs.Wait()
+		}
 		return nil, fmt.Errorf("start managed process: %w", err)
 	}
 	if logger != nil {
@@ -114,6 +119,22 @@ func (p *Process) Wait() <-chan Result {
 	return p.done
 }
 
+// PID returns the managed process ID, or 0 when unavailable.
+func (p *Process) PID() int {
+	if p == nil || p.cmd == nil || p.cmd.Process == nil {
+		return 0
+	}
+	return p.cmd.Process.Pid
+}
+
+// StartedAt reports when the managed process was launched.
+func (p *Process) StartedAt() time.Time {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.started
+}
+
 func (p *Process) wait() {
 	defer close(p.done)
 
@@ -128,6 +149,9 @@ func (p *Process) wait() {
 		_ = p.terminateJob(uint32(exitCode))
 	}
 	p.closeJob()
+	if p.logs != nil {
+		err = joinRuntimeError(err, p.logs.Wait())
+	}
 
 	p.done <- Result{
 		ExitCode: exitCode,
@@ -136,8 +160,9 @@ func (p *Process) wait() {
 	}
 }
 
-func attachIO(cmd *exec.Cmd, service config.Service, dir string) ([]*os.File, error) {
+func attachIO(cmd *exec.Cmd, service config.Service, dir string) ([]*os.File, *logManager, error) {
 	files := make([]*os.File, 0, 3)
+	logs := newLogManager()
 
 	openPath := func(path string) (string, error) {
 		if path == "" {
@@ -155,12 +180,12 @@ func attachIO(cmd *exec.Cmd, service config.Service, dir string) ([]*os.File, er
 
 	stdinPath, err := openPath(service.StdinPath)
 	if err != nil {
-		return nil, fmt.Errorf("resolve stdin path: %w", err)
+		return nil, nil, fmt.Errorf("resolve stdin path: %w", err)
 	}
 	if stdinPath != "" {
 		file, err := os.Open(stdinPath)
 		if err != nil {
-			return nil, fmt.Errorf("open stdin path: %w", err)
+			return nil, nil, fmt.Errorf("open stdin path: %w", err)
 		}
 		cmd.Stdin = file
 		files = append(files, file)
@@ -168,44 +193,78 @@ func attachIO(cmd *exec.Cmd, service config.Service, dir string) ([]*os.File, er
 
 	stdoutPath, err := openPath(service.StdoutPath)
 	if err != nil {
-		return nil, fmt.Errorf("resolve stdout path: %w", err)
+		return nil, nil, fmt.Errorf("resolve stdout path: %w", err)
 	}
 	stderrPath, err := openPath(service.StderrPath)
 	if err != nil {
-		return nil, fmt.Errorf("resolve stderr path: %w", err)
+		return nil, nil, fmt.Errorf("resolve stderr path: %w", err)
+	}
+
+	prepareOutput := func(path string) (*os.File, error) {
+		if path == "" {
+			return nil, nil
+		}
+		if sink := logs.Sink(path); sink != nil {
+			return sink.pipeWriter, nil
+		}
+
+		usePipeline := service.Logging.TimestampLog || (service.Logging.Enabled && service.Logging.Online)
+		if service.Logging.Enabled && !usePipeline {
+			if err := rotateExistingFile(path, service.Logging); err != nil {
+				return nil, err
+			}
+		}
+
+		if usePipeline {
+			reader, writer, err := os.Pipe()
+			if err != nil {
+				return nil, err
+			}
+			sink := newLogSink(service.Name, path, reader, service.Logging)
+			sink.pipeWriter = writer
+			logs.AddSink(path, sink)
+			files = append(files, writer)
+			return writer, nil
+		}
+
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return nil, err
+		}
+		file, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, file)
+		return file, nil
 	}
 
 	var stdoutFile *os.File
 	if stdoutPath != "" {
-		if err := os.MkdirAll(filepath.Dir(stdoutPath), 0o755); err != nil {
-			return nil, fmt.Errorf("create stdout directory: %w", err)
-		}
-		file, err := os.OpenFile(stdoutPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+		file, err := prepareOutput(stdoutPath)
 		if err != nil {
-			return nil, fmt.Errorf("open stdout path: %w", err)
+			return nil, nil, fmt.Errorf("open stdout path: %w", err)
 		}
 		cmd.Stdout = file
 		stdoutFile = file
-		files = append(files, file)
 	}
 
 	if stderrPath != "" {
 		if stdoutFile != nil && strings.EqualFold(stderrPath, stdoutPath) {
 			cmd.Stderr = stdoutFile
 		} else {
-			if err := os.MkdirAll(filepath.Dir(stderrPath), 0o755); err != nil {
-				return nil, fmt.Errorf("create stderr directory: %w", err)
-			}
-			file, err := os.OpenFile(stderrPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+			file, err := prepareOutput(stderrPath)
 			if err != nil {
-				return nil, fmt.Errorf("open stderr path: %w", err)
+				return nil, nil, fmt.Errorf("open stderr path: %w", err)
 			}
 			cmd.Stderr = file
-			files = append(files, file)
 		}
 	}
 
-	return files, nil
+	if len(logs.order) == 0 {
+		return files, nil, nil
+	}
+	logs.Start()
+	return files, logs, nil
 }
 
 func closeFiles(files []*os.File) {

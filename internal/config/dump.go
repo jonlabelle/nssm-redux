@@ -2,6 +2,8 @@ package config
 
 import (
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/jonlabelle/nssm-redux/internal/support"
 )
@@ -73,6 +75,32 @@ func DumpCommands(program string, service Service, targetName string) ([]string,
 	}
 	if service.StopThreadsDelay != defaults.StopThreadsDelay {
 		add(program, "set", targetName, string(SettingAppStopMethodThreads), Milliseconds(service.StopThreadsDelay))
+	}
+	for _, hook := range SupportedHooks() {
+		if command := service.Hooks[hook]; strings.TrimSpace(command) != "" {
+			add(program, "set", targetName, string(SettingAppEvents), string(hook), command)
+		}
+	}
+	if service.Logging.Enabled != defaults.Logging.Enabled {
+		add(program, "set", targetName, string(SettingAppRotateFiles), boolString(service.Logging.Enabled))
+	}
+	if service.Logging.Online != defaults.Logging.Online {
+		add(program, "set", targetName, string(SettingAppRotateOnline), boolString(service.Logging.Online))
+	}
+	if service.Logging.AgeThreshold != defaults.Logging.AgeThreshold {
+		add(program, "set", targetName, string(SettingAppRotateSeconds), strconv.FormatInt(int64(service.Logging.AgeThreshold/time.Second), 10))
+	}
+	if service.Logging.SizeLow() != 0 {
+		add(program, "set", targetName, string(SettingAppRotateBytes), strconv.FormatUint(uint64(service.Logging.SizeLow()), 10))
+	}
+	if service.Logging.SizeHigh() != 0 {
+		add(program, "set", targetName, string(SettingAppRotateBytesHigh), strconv.FormatUint(uint64(service.Logging.SizeHigh()), 10))
+	}
+	if service.Logging.RotateDelay != defaults.Logging.RotateDelay {
+		add(program, "set", targetName, string(SettingAppRotateDelay), Milliseconds(service.Logging.RotateDelay))
+	}
+	if service.Logging.TimestampLog != defaults.Logging.TimestampLog {
+		add(program, "set", targetName, string(SettingAppTimestampLog), boolString(service.Logging.TimestampLog))
 	}
 	if service.StdinPath != "" {
 		add(program, "set", targetName, string(SettingAppStdin), service.StdinPath)

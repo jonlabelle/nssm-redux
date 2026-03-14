@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestDumpCommands(t *testing.T) {
 	t.Parallel()
@@ -12,6 +15,10 @@ func TestDumpCommands(t *testing.T) {
 	service.DefaultExitAction = ExitActionIgnore
 	service.Priority = PriorityHigh
 	service.Affinity = 0b10111
+	service.Hooks[HookStartPre] = `C:\hooks\pre.cmd`
+	service.Logging.Enabled = true
+	service.Logging.AgeThreshold = 5 * time.Minute
+	service.Logging.TimestampLog = true
 
 	commands, err := DumpCommands("nssmr", service, "")
 	if err != nil {
@@ -26,6 +33,8 @@ func TestDumpCommands(t *testing.T) {
 	}
 	foundPriority := false
 	foundAffinity := false
+	foundHook := false
+	foundRotate := false
 	for _, command := range commands {
 		if command == `nssmr set svc AppPriority HIGH_PRIORITY_CLASS` {
 			foundPriority = true
@@ -33,11 +42,23 @@ func TestDumpCommands(t *testing.T) {
 		if command == `nssmr set svc AppAffinity 0-2,4` {
 			foundAffinity = true
 		}
+		if command == `nssmr set svc AppEvents Start/Pre C:\hooks\pre.cmd` {
+			foundHook = true
+		}
+		if command == `nssmr set svc AppRotateFiles 1` {
+			foundRotate = true
+		}
 	}
 	if !foundPriority {
 		t.Fatalf("DumpCommands() missing AppPriority command: %#v", commands)
 	}
 	if !foundAffinity {
 		t.Fatalf("DumpCommands() missing AppAffinity command: %#v", commands)
+	}
+	if !foundHook {
+		t.Fatalf("DumpCommands() missing AppEvents command: %#v", commands)
+	}
+	if !foundRotate {
+		t.Fatalf("DumpCommands() missing AppRotateFiles command: %#v", commands)
 	}
 }

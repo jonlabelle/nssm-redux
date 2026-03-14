@@ -9,6 +9,7 @@ import (
 
 	"github.com/jonlabelle/nssm-redux/internal/config"
 	"github.com/jonlabelle/nssm-redux/internal/scm"
+	"github.com/jonlabelle/nssm-redux/internal/support"
 	"github.com/jonlabelle/nssm-redux/internal/svcwrap"
 )
 
@@ -81,6 +82,24 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		}
 		return scm.Restart(args[1])
 
+	case "pause":
+		if len(args) < 2 {
+			return usageError("pause requires <service>")
+		}
+		return scm.Pause(args[1])
+
+	case "continue":
+		if len(args) < 2 {
+			return usageError("continue requires <service>")
+		}
+		return scm.Continue(args[1])
+
+	case "rotate":
+		if len(args) < 2 {
+			return usageError("rotate requires <service>")
+		}
+		return scm.Rotate(args[1])
+
 	case "status":
 		if len(args) < 2 {
 			return usageError("status requires <service>")
@@ -115,6 +134,33 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		}
 		return nil
 
+	case "processes":
+		if len(args) < 2 {
+			return usageError("processes requires <service>")
+		}
+		for i, service := range args[1:] {
+			tree, err := scm.ProcessTreeForService(service)
+			if err != nil {
+				return err
+			}
+			if len(args[1:]) > 1 {
+				if _, err := fmt.Fprintln(stdout, tree.Service); err != nil {
+					return err
+				}
+			}
+			for _, line := range scm.FormatProcessTree(tree) {
+				if _, err := fmt.Fprintln(stdout, line); err != nil {
+					return err
+				}
+			}
+			if i < len(args[1:])-1 {
+				if _, err := fmt.Fprintln(stdout); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+
 	case "get":
 		return runGet(stdout, args[1:])
 
@@ -140,6 +186,12 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		if err != nil {
 			return err
 		}
+		if account, err := scm.GetObjectName(args[1]); err == nil {
+			if targetName == "" {
+				targetName = args[1]
+			}
+			commands = append(commands, dumpObjectNameCommand(targetName, account))
+		}
 		for _, command := range commands {
 			if _, err := fmt.Fprintln(stdout, command); err != nil {
 				return err
@@ -160,6 +212,15 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 func runGet(stdout io.Writer, args []string) error {
 	if len(args) < 2 {
 		return usageError("get requires <service> <setting>")
+	}
+
+	if strings.EqualFold(args[1], "ObjectName") {
+		account, err := scm.GetObjectName(args[0])
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintln(stdout, account)
+		return err
 	}
 
 	spec, ok := config.LookupSetting(args[1])
@@ -196,6 +257,20 @@ func runSet(args []string, reset bool) error {
 		return usageError("set/reset require <service> <setting>")
 	}
 
+	if strings.EqualFold(args[1], "ObjectName") {
+		if reset {
+			return scm.ResetObjectName(args[0])
+		}
+		if len(args) < 3 {
+			return usageError("ObjectName requires a username")
+		}
+		password := ""
+		if len(args) > 3 {
+			password = strings.Join(args[3:], " ")
+		}
+		return scm.SetObjectName(args[0], args[2], password)
+	}
+
 	spec, ok := config.LookupSetting(args[1])
 	if !ok {
 		return usageError(fmt.Sprintf("unknown setting %q", args[1]))
@@ -221,6 +296,19 @@ func runSet(args []string, reset bool) error {
 	return scm.Save(cfg)
 }
 
+func dumpObjectNameCommand(serviceName, account string) string {
+	if strings.TrimSpace(account) == "" || strings.EqualFold(account, "LocalSystem") || strings.EqualFold(account, "NT AUTHORITY\\System") {
+		return support.JoinCommandLine([]string{"nssmr", "reset", serviceName, "ObjectName"})
+	}
+	if strings.HasPrefix(strings.ToLower(account), strings.ToLower("NT Service\\")) {
+		return support.JoinCommandLine([]string{"nssmr", "set", serviceName, "ObjectName", account})
+	}
+	if strings.EqualFold(account, "NT AUTHORITY\\LocalService") || strings.EqualFold(account, "NT AUTHORITY\\NetworkService") {
+		return support.JoinCommandLine([]string{"nssmr", "set", serviceName, "ObjectName", account})
+	}
+	return support.JoinCommandLine([]string{"nssmr", "set", serviceName, "ObjectName", account, "****"})
+}
+
 func usageError(message string) error {
 	if message == "" {
 		return fmt.Errorf("%s", usageText)
@@ -231,9 +319,10 @@ func usageError(message string) error {
 const usageText = `usage:
   nssmr install <service> <application> [arguments...]
   nssmr remove <service>
-  nssmr start|stop|restart <service>
+  nssmr start|stop|restart|pause|continue|rotate <service>
   nssmr status|statuscode <service>
   nssmr list
+  nssmr processes <service> [service...]
   nssmr get <service> <setting> [additional]
   nssmr set <service> <setting> [additional] [value...]
   nssmr reset <service> <setting> [additional]

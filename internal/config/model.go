@@ -45,6 +45,8 @@ type Service struct {
 	Dependencies      []string
 	Priority          PriorityClass
 	Affinity          AffinityMask
+	Hooks             map[Hook]string
+	Logging           LogRotationSettings
 	StdinPath         string
 	StdoutPath        string
 	StderrPath        string
@@ -69,6 +71,7 @@ func Default(name string) Service {
 		Priority:          PriorityNormal,
 		Startup:           StartupAutomatic,
 		ThrottleDelay:     defaultThrottleDelay,
+		Hooks:             make(map[Hook]string),
 		StopConsoleDelay:  defaultStopMethodDelay,
 		StopWindowDelay:   defaultStopMethodDelay,
 		StopThreadsDelay:  defaultStopMethodDelay,
@@ -87,6 +90,10 @@ func (s Service) Clone() Service {
 	clone.ExitActions = make(map[int]ExitAction, len(s.ExitActions))
 	for code, action := range s.ExitActions {
 		clone.ExitActions[code] = action
+	}
+	clone.Hooks = make(map[Hook]string, len(s.Hooks))
+	for hook, command := range s.Hooks {
+		clone.Hooks[hook] = command
 	}
 	return clone
 }
@@ -113,6 +120,9 @@ func (s *Service) Normalize() {
 	}
 	if s.ExitActions == nil {
 		s.ExitActions = make(map[int]ExitAction)
+	}
+	if s.Hooks == nil {
+		s.Hooks = make(map[Hook]string)
 	}
 	if s.Directory == "" && s.Executable != "" {
 		s.Directory = filepath.Dir(s.Executable)
@@ -155,6 +165,14 @@ func (s *Service) Validate() error {
 	for _, entry := range append([]string{}, append(s.Environment, s.EnvironmentExtra...)...) {
 		if _, _, ok := strings.Cut(entry, "="); !ok {
 			return fmt.Errorf("environment entry %q must use KEY=VALUE format", entry)
+		}
+	}
+	for hook, command := range s.Hooks {
+		if _, err := ParseHook(string(hook)); err != nil {
+			return err
+		}
+		if strings.TrimSpace(command) == "" {
+			return fmt.Errorf("hook %q command is empty", hook)
 		}
 	}
 	return nil

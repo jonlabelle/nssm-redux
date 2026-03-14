@@ -41,7 +41,20 @@ func (p *Process) Wait() <-chan Result {
 	return ch
 }
 
+func (p *Process) PID() int {
+	return 0
+}
+
+func (p *Process) StartedAt() time.Time {
+	return time.Time{}
+}
+
 // Stop returns an unsupported error on non-Windows platforms.
 func (p *Process) Stop() (bool, error) {
 	return false, ErrUnsupported
+}
+
+// Rotate returns an unsupported error on non-Windows platforms.
+func (p *Process) Rotate() error {
+	return ErrUnsupported
 }

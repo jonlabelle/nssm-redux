@@ -9,8 +9,9 @@ on:
       - main
     paths-ignore:
       - "**/*.md"
+  workflow_dispatch:
 
-# Declare default permissions as read only
+# default permissions to read only
 permissions: read-all
 
 jobs:

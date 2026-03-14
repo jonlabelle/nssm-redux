@@ -16,6 +16,7 @@ Implemented in this first port slice:
 - Restart policy with `AppExit`, `AppRestartDelay`, and `AppThrottle`
 - `AppEnvironment` replacement plus `AppEnvironmentExtra` merging
 - `AppDirectory`, `AppParameters`, `AppStdin`, `AppStdout`, `AppStderr`, `AppNoConsole`, and `AppKillProcessTree`
+- `AppPriority`, `AppAffinity`, and the legacy `AppStopMethod*` stop controls
 - Native service metadata updates for display name, description, startup type, and dependencies
 - Tagged GitHub Actions releases for `windows/amd64` and `windows/arm64`
 
@@ -25,7 +26,6 @@ Not yet ported:
 - Hook events
 - Log rotation and timestamped log streaming
 - Service account management
-- Affinity, priority, and the legacy stop-method matrix
 - Process tree inspection and pause/continue controls
 
 ## Build
@@ -57,6 +57,9 @@ nssmr set MyService AppDirectory "C:\apps"
 nssmr set MyService AppStdout "C:\logs\worker.out.log"
 nssmr set MyService AppStderr "C:\logs\worker.err.log"
 nssmr set MyService AppEnvironment "ENV=prod" "PORT=8080"
+nssmr set MyService AppPriority ABOVE_NORMAL_PRIORITY_CLASS
+nssmr set MyService AppAffinity 0-3
+nssmr set MyService AppStopMethodSkip 0
 nssmr set MyService Start SERVICE_DELAYED_AUTO_START
 ```
 

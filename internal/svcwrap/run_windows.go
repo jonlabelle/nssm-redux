@@ -65,19 +65,35 @@ func (h *serviceHandler) Execute(_ []string, requests <-chan svc.ChangeRequest, 
 	changes <- status
 
 	results := process.Wait()
+	stopDone := make(chan stopOutcome, 1)
 	consecutiveFast := 0
 	stopping := false
+
+	beginStop := func(reason string) {
+		if stopping {
+			return
+		}
+		stopping = true
+		results = nil
+		status = svc.Status{State: svc.StopPending, WaitHint: waitHintFor(cfg.StopWaitHint() + time.Second)}
+		changes <- status
+		if process == nil {
+			stopDone <- stopOutcome{}
+			return
+		}
+		go func(proc *runtime.Process) {
+			detached, err := proc.Stop()
+			stopDone <- stopOutcome{detached: detached, err: err}
+		}(process)
+		if reason != "" {
+			logger.Infof("%s", reason)
+		}
+	}
 
 	for {
 		select {
 		case <-h.ctx.Done():
-			stopping = true
-			status = svc.Status{State: svc.StopPending}
-			changes <- status
-			if process == nil {
-				return false, 0
-			}
-			_ = process.Stop()
+			beginStop("service context cancelled")
 
 		case request := <-requests:
 			switch request.Cmd {
@@ -85,20 +101,20 @@ func (h *serviceHandler) Execute(_ []string, requests <-chan svc.ChangeRequest, 
 				changes <- status
 
 			case svc.Stop, svc.Shutdown:
-				stopping = true
-				status = svc.Status{State: svc.StopPending}
-				changes <- status
-				if process == nil {
-					return false, 0
-				}
-				_ = process.Stop()
+				beginStop("service stop received")
 			}
+
+		case stop := <-stopDone:
+			if stop.err != nil {
+				logger.Warnf("stop managed process: %v", stop.err)
+			}
+			if stop.detached {
+				logger.Warnf("managed process is still running because AppStopMethodSkip disables terminate")
+			}
+			return false, 0
 
 		case result, ok := <-results:
 			if !ok {
-				return false, 0
-			}
-			if stopping {
 				return false, 0
 			}
 
@@ -139,6 +155,11 @@ func (h *serviceHandler) Execute(_ []string, requests <-chan svc.ChangeRequest, 
 			}
 		}
 	}
+}
+
+type stopOutcome struct {
+	detached bool
+	err      error
 }
 
 func (h *serviceHandler) waitForRestartWindow(
@@ -234,4 +255,14 @@ func (l *serviceLogger) logf(level, format string, args ...any) {
 		}
 	}
 	l.fallback.Printf("%s: %s", level, message)
+}
+
+func waitHintFor(delay time.Duration) uint32 {
+	if delay <= 0 {
+		return 1000
+	}
+	if delay > time.Duration(math.MaxUint32)*time.Millisecond {
+		return math.MaxUint32
+	}
+	return uint32(delay.Milliseconds())
 }

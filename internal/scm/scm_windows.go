@@ -371,6 +371,24 @@ func saveParameters(service config.Service) error {
 	if err := setMilliseconds(key, string(config.SettingAppThrottle), service.ThrottleDelay, 1500*time.Millisecond); err != nil {
 		return err
 	}
+	if err := setPriorityValue(key, string(config.SettingAppPriority), service.Priority, config.PriorityNormal); err != nil {
+		return err
+	}
+	if err := setStringValue(key, string(config.SettingAppAffinity), config.FormatAffinityMask(service.Affinity)); err != nil {
+		return err
+	}
+	if err := setDefaultedDWord(key, string(config.SettingAppStopMethodSkip), uint32(service.StopMethodSkip), 0); err != nil {
+		return err
+	}
+	if err := setMilliseconds(key, string(config.SettingAppStopMethodConsole), service.StopConsoleDelay, 1500*time.Millisecond); err != nil {
+		return err
+	}
+	if err := setMilliseconds(key, string(config.SettingAppStopMethodWindow), service.StopWindowDelay, 1500*time.Millisecond); err != nil {
+		return err
+	}
+	if err := setMilliseconds(key, string(config.SettingAppStopMethodThreads), service.StopThreadsDelay, 1500*time.Millisecond); err != nil {
+		return err
+	}
 	if err := setDefaultedBool(key, string(config.SettingAppNoConsole), service.NoConsole, false); err != nil {
 		return err
 	}
@@ -413,6 +431,12 @@ func loadParameters(service *config.Service) error {
 	service.EnvironmentExtra = getStringsValue(key, string(config.SettingAppEnvironmentExtra))
 	service.RestartDelay = getMillisecondsValue(key, string(config.SettingAppRestartDelay), 0)
 	service.ThrottleDelay = getMillisecondsValue(key, string(config.SettingAppThrottle), 1500*time.Millisecond)
+	service.Priority = getPriorityValue(key, string(config.SettingAppPriority), config.PriorityNormal)
+	service.Affinity = getAffinityValue(key, string(config.SettingAppAffinity))
+	service.StopMethodSkip = getStopMethodValue(key, string(config.SettingAppStopMethodSkip), 0)
+	service.StopConsoleDelay = getMillisecondsValue(key, string(config.SettingAppStopMethodConsole), 1500*time.Millisecond)
+	service.StopWindowDelay = getMillisecondsValue(key, string(config.SettingAppStopMethodWindow), 1500*time.Millisecond)
+	service.StopThreadsDelay = getMillisecondsValue(key, string(config.SettingAppStopMethodThreads), 1500*time.Millisecond)
 	service.NoConsole = getBoolValue(key, string(config.SettingAppNoConsole), false)
 	service.KillProcessTree = getBoolValue(key, string(config.SettingAppKillProcessTree), true)
 
@@ -563,6 +587,16 @@ func setExpandString(key registry.Key, name, value string) error {
 	return nil
 }
 
+func setStringValue(key registry.Key, name, value string) error {
+	if value == "" {
+		return deleteValueIfExists(key, name)
+	}
+	if err := key.SetStringValue(name, value); err != nil {
+		return fmt.Errorf("write %s: %w", name, err)
+	}
+	return nil
+}
+
 func setStrings(key registry.Key, name string, value []string) error {
 	if len(value) == 0 {
 		return deleteValueIfExists(key, name)
@@ -571,6 +605,26 @@ func setStrings(key registry.Key, name string, value []string) error {
 		return fmt.Errorf("write %s: %w", name, err)
 	}
 	return nil
+}
+
+func setDefaultedDWord(key registry.Key, name string, value, defaultValue uint32) error {
+	if value == defaultValue {
+		return deleteValueIfExists(key, name)
+	}
+	if err := key.SetDWordValue(name, value); err != nil {
+		return fmt.Errorf("write %s: %w", name, err)
+	}
+	return nil
+}
+
+func setPriorityValue(key registry.Key, name string, value, defaultValue config.PriorityClass) error {
+	if value == "" {
+		value = config.PriorityNormal
+	}
+	if defaultValue == "" {
+		defaultValue = config.PriorityNormal
+	}
+	return setDefaultedDWord(key, name, value.WindowsValue(), defaultValue.WindowsValue())
 }
 
 func setMilliseconds(key registry.Key, name string, value, defaultValue time.Duration) error {
@@ -640,6 +694,42 @@ func getBoolValue(key registry.Key, name string, defaultValue bool) bool {
 		return defaultValue
 	}
 	return value != 0
+}
+
+func getPriorityValue(key registry.Key, name string, defaultValue config.PriorityClass) config.PriorityClass {
+	value, _, err := key.GetIntegerValue(name)
+	if err != nil {
+		return defaultValue
+	}
+	priority, ok := config.PriorityClassFromWindowsValue(uint32(value))
+	if !ok {
+		return defaultValue
+	}
+	return priority
+}
+
+func getAffinityValue(key registry.Key, name string) config.AffinityMask {
+	value, _, err := key.GetStringValue(name)
+	if err != nil {
+		return 0
+	}
+	mask, err := config.ParseAffinityMask(value)
+	if err != nil {
+		return 0
+	}
+	return mask
+}
+
+func getStopMethodValue(key registry.Key, name string, defaultValue config.StopMethodSkip) config.StopMethodSkip {
+	value, _, err := key.GetIntegerValue(name)
+	if err != nil {
+		return defaultValue
+	}
+	mask := config.StopMethodSkip(value)
+	if mask&^config.StopMethodAll != 0 {
+		return defaultValue
+	}
+	return mask
 }
 
 func parseExitAction(raw string) (config.ExitAction, error) {

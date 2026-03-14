@@ -43,12 +43,18 @@ type Service struct {
 	Environment       []string
 	EnvironmentExtra  []string
 	Dependencies      []string
+	Priority          PriorityClass
+	Affinity          AffinityMask
 	StdinPath         string
 	StdoutPath        string
 	StderrPath        string
 	Startup           StartupType
 	RestartDelay      time.Duration
 	ThrottleDelay     time.Duration
+	StopMethodSkip    StopMethodSkip
+	StopConsoleDelay  time.Duration
+	StopWindowDelay   time.Duration
+	StopThreadsDelay  time.Duration
 	DefaultExitAction ExitAction
 	ExitActions       map[int]ExitAction
 	NoConsole         bool
@@ -60,8 +66,12 @@ func Default(name string) Service {
 	return Service{
 		Name:              name,
 		DisplayName:       name,
+		Priority:          PriorityNormal,
 		Startup:           StartupAutomatic,
 		ThrottleDelay:     defaultThrottleDelay,
+		StopConsoleDelay:  defaultStopMethodDelay,
+		StopWindowDelay:   defaultStopMethodDelay,
+		StopThreadsDelay:  defaultStopMethodDelay,
 		DefaultExitAction: ExitActionRestart,
 		ExitActions:       make(map[int]ExitAction),
 		KillProcessTree:   true,
@@ -88,6 +98,9 @@ func (s *Service) Normalize() {
 	}
 	if s.Startup == "" {
 		s.Startup = StartupAutomatic
+	}
+	if s.Priority == "" {
+		s.Priority = PriorityNormal
 	}
 	if s.ThrottleDelay < 0 {
 		s.ThrottleDelay = 0
@@ -119,8 +132,17 @@ func (s *Service) Validate() error {
 	if !validStartupType(s.Startup) {
 		return fmt.Errorf("unsupported startup type %q", s.Startup)
 	}
+	if !validPriorityClass(s.Priority) {
+		return fmt.Errorf("unsupported priority class %q", s.Priority)
+	}
 	if !validExitAction(s.DefaultExitAction) {
 		return fmt.Errorf("unsupported default exit action %q", s.DefaultExitAction)
+	}
+	if s.StopMethodSkip&^StopMethodAll != 0 {
+		return fmt.Errorf("unsupported stop method skip mask %#x", uint32(s.StopMethodSkip))
+	}
+	if s.StopConsoleDelay < 0 || s.StopWindowDelay < 0 || s.StopThreadsDelay < 0 {
+		return errors.New("stop method delays must be non-negative")
 	}
 	for code, action := range s.ExitActions {
 		if code < 0 {

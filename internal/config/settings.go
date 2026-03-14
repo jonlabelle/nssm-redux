@@ -13,23 +13,29 @@ import (
 type Setting string
 
 const (
-	SettingApplication         Setting = "Application"
-	SettingAppParameters       Setting = "AppParameters"
-	SettingAppDirectory        Setting = "AppDirectory"
-	SettingAppEnvironment      Setting = "AppEnvironment"
-	SettingAppEnvironmentExtra Setting = "AppEnvironmentExtra"
-	SettingAppExit             Setting = "AppExit"
-	SettingAppRestartDelay     Setting = "AppRestartDelay"
-	SettingAppThrottle         Setting = "AppThrottle"
-	SettingAppStdin            Setting = "AppStdin"
-	SettingAppStdout           Setting = "AppStdout"
-	SettingAppStderr           Setting = "AppStderr"
-	SettingAppNoConsole        Setting = "AppNoConsole"
-	SettingAppKillProcessTree  Setting = "AppKillProcessTree"
-	SettingDisplayName         Setting = "DisplayName"
-	SettingDescription         Setting = "Description"
-	SettingStart               Setting = "Start"
-	SettingDependOnService     Setting = "DependOnService"
+	SettingApplication          Setting = "Application"
+	SettingAppParameters        Setting = "AppParameters"
+	SettingAppDirectory         Setting = "AppDirectory"
+	SettingAppEnvironment       Setting = "AppEnvironment"
+	SettingAppEnvironmentExtra  Setting = "AppEnvironmentExtra"
+	SettingAppExit              Setting = "AppExit"
+	SettingAppRestartDelay      Setting = "AppRestartDelay"
+	SettingAppThrottle          Setting = "AppThrottle"
+	SettingAppPriority          Setting = "AppPriority"
+	SettingAppAffinity          Setting = "AppAffinity"
+	SettingAppStopMethodSkip    Setting = "AppStopMethodSkip"
+	SettingAppStopMethodConsole Setting = "AppStopMethodConsole"
+	SettingAppStopMethodWindow  Setting = "AppStopMethodWindow"
+	SettingAppStopMethodThreads Setting = "AppStopMethodThreads"
+	SettingAppStdin             Setting = "AppStdin"
+	SettingAppStdout            Setting = "AppStdout"
+	SettingAppStderr            Setting = "AppStderr"
+	SettingAppNoConsole         Setting = "AppNoConsole"
+	SettingAppKillProcessTree   Setting = "AppKillProcessTree"
+	SettingDisplayName          Setting = "DisplayName"
+	SettingDescription          Setting = "Description"
+	SettingStart                Setting = "Start"
+	SettingDependOnService      Setting = "DependOnService"
 )
 
 // SettingSpec describes the CLI shape for a setting.
@@ -48,6 +54,12 @@ var settingSpecs = []SettingSpec{
 	{Name: SettingAppExit, AdditionalMandatory: true},
 	{Name: SettingAppRestartDelay},
 	{Name: SettingAppThrottle},
+	{Name: SettingAppPriority},
+	{Name: SettingAppAffinity},
+	{Name: SettingAppStopMethodSkip},
+	{Name: SettingAppStopMethodConsole},
+	{Name: SettingAppStopMethodWindow},
+	{Name: SettingAppStopMethodThreads},
 	{Name: SettingAppStdin},
 	{Name: SettingAppStdout},
 	{Name: SettingAppStderr},
@@ -148,6 +160,82 @@ func Apply(service *Service, setting Setting, additional string, values []string
 			return fmt.Errorf("parse %s: %w", setting, err)
 		}
 		service.ThrottleDelay = d
+		return nil
+
+	case SettingAppPriority:
+		if reset {
+			service.Priority = defaults.Priority
+			return nil
+		}
+		priority, err := ParsePriorityClass(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.Priority = priority
+		return nil
+
+	case SettingAppAffinity:
+		if reset {
+			service.Affinity = 0
+			return nil
+		}
+		raw := singleValue(values)
+		if strings.TrimSpace(raw) == "" {
+			return fmt.Errorf("parse %s: value is required", setting)
+		}
+		mask, err := ParseAffinityMask(raw)
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.Affinity = mask
+		return nil
+
+	case SettingAppStopMethodSkip:
+		if reset {
+			service.StopMethodSkip = defaults.StopMethodSkip
+			return nil
+		}
+		mask, err := parseStopMethodSkip(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.StopMethodSkip = mask
+		return nil
+
+	case SettingAppStopMethodConsole:
+		if reset {
+			service.StopConsoleDelay = defaults.StopConsoleDelay
+			return nil
+		}
+		d, err := parseDurationValue(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.StopConsoleDelay = d
+		return nil
+
+	case SettingAppStopMethodWindow:
+		if reset {
+			service.StopWindowDelay = defaults.StopWindowDelay
+			return nil
+		}
+		d, err := parseDurationValue(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.StopWindowDelay = d
+		return nil
+
+	case SettingAppStopMethodThreads:
+		if reset {
+			service.StopThreadsDelay = defaults.StopThreadsDelay
+			return nil
+		}
+		d, err := parseDurationValue(singleValue(values))
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", setting, err)
+		}
+		service.StopThreadsDelay = d
 		return nil
 
 	case SettingAppStdin:
@@ -257,6 +345,18 @@ func Read(service Service, setting Setting, additional string) ([]string, error)
 		return []string{Milliseconds(service.RestartDelay)}, nil
 	case SettingAppThrottle:
 		return []string{Milliseconds(service.ThrottleDelay)}, nil
+	case SettingAppPriority:
+		return []string{string(service.Priority)}, nil
+	case SettingAppAffinity:
+		return []string{FormatAffinityMask(service.Affinity)}, nil
+	case SettingAppStopMethodSkip:
+		return []string{strconv.FormatUint(uint64(service.StopMethodSkip), 10)}, nil
+	case SettingAppStopMethodConsole:
+		return []string{Milliseconds(service.StopConsoleDelay)}, nil
+	case SettingAppStopMethodWindow:
+		return []string{Milliseconds(service.StopWindowDelay)}, nil
+	case SettingAppStopMethodThreads:
+		return []string{Milliseconds(service.StopThreadsDelay)}, nil
 	case SettingAppStdin:
 		return []string{service.StdinPath}, nil
 	case SettingAppStdout:
@@ -384,6 +484,19 @@ func parseStartup(raw string) (StartupType, error) {
 	default:
 		return "", fmt.Errorf("invalid startup type %q", raw)
 	}
+}
+
+func parseStopMethodSkip(raw string) (StopMethodSkip, error) {
+	value, err := strconv.ParseUint(strings.TrimSpace(raw), 0, 32)
+	if err != nil {
+		return 0, fmt.Errorf("invalid stop method skip mask %q", raw)
+	}
+
+	mask := StopMethodSkip(value)
+	if mask&^StopMethodAll != 0 {
+		return 0, fmt.Errorf("unsupported stop method skip mask %#x", value)
+	}
+	return mask, nil
 }
 
 func singleValue(values []string) string {

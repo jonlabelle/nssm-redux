@@ -56,6 +56,24 @@ func DumpCommands(program string, service Service, targetName string) ([]string,
 	if service.ThrottleDelay != defaults.ThrottleDelay {
 		add(program, "set", targetName, string(SettingAppThrottle), Milliseconds(service.ThrottleDelay))
 	}
+	if service.Priority != defaults.Priority {
+		add(program, "set", targetName, string(SettingAppPriority), string(service.Priority))
+	}
+	if service.Affinity != 0 {
+		add(program, "set", targetName, string(SettingAppAffinity), FormatAffinityMask(service.Affinity))
+	}
+	if service.StopMethodSkip != defaults.StopMethodSkip {
+		add(program, "set", targetName, string(SettingAppStopMethodSkip), strconv.FormatUint(uint64(service.StopMethodSkip), 10))
+	}
+	if service.StopConsoleDelay != defaults.StopConsoleDelay {
+		add(program, "set", targetName, string(SettingAppStopMethodConsole), Milliseconds(service.StopConsoleDelay))
+	}
+	if service.StopWindowDelay != defaults.StopWindowDelay {
+		add(program, "set", targetName, string(SettingAppStopMethodWindow), Milliseconds(service.StopWindowDelay))
+	}
+	if service.StopThreadsDelay != defaults.StopThreadsDelay {
+		add(program, "set", targetName, string(SettingAppStopMethodThreads), Milliseconds(service.StopThreadsDelay))
+	}
 	if service.StdinPath != "" {
 		add(program, "set", targetName, string(SettingAppStdin), service.StdinPath)
 	}

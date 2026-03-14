@@ -42,6 +42,6 @@ func (p *Process) Wait() <-chan Result {
 }
 
 // Stop returns an unsupported error on non-Windows platforms.
-func (p *Process) Stop() error {
-	return ErrUnsupported
+func (p *Process) Stop() (bool, error) {
+	return false, ErrUnsupported
 }

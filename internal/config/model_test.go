@@ -15,8 +15,14 @@ func TestDefault(t *testing.T) {
 	if service.Startup != StartupAutomatic {
 		t.Fatalf("Startup = %q, want %q", service.Startup, StartupAutomatic)
 	}
+	if service.Priority != PriorityNormal {
+		t.Fatalf("Priority = %q, want %q", service.Priority, PriorityNormal)
+	}
 	if service.DefaultExitAction != ExitActionRestart {
 		t.Fatalf("DefaultExitAction = %q, want %q", service.DefaultExitAction, ExitActionRestart)
+	}
+	if service.StopConsoleDelay != defaultStopMethodDelay {
+		t.Fatalf("StopConsoleDelay = %v, want %v", service.StopConsoleDelay, defaultStopMethodDelay)
 	}
 	if !service.KillProcessTree {
 		t.Fatal("KillProcessTree = false, want true")

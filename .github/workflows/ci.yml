@@ -84,7 +84,7 @@ jobs:
           go build -trimpath -ldflags "-s -w -X github.com/jonlabelle/nssm-redux/internal/cli.Version=${GITHUB_SHA}" -o "dist/nssmr-windows-${GOARCH}.exe" ./cmd/nssmr
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: nssmr-windows-${{ matrix.goarch }}
           path: dist/nssmr-windows-${{ matrix.goarch }}.exe

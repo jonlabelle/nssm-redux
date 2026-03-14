@@ -85,6 +85,7 @@ Runtime note:
 
 ## Docs
 
+- [Changelog](CHANGELOG.md)
 - [Documentation index](docs/README.md)
 - [Compatibility and parity notes](docs/compatibility.md)
 

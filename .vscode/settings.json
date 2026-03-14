@@ -1,0 +1,70 @@
+{
+  // ============================================================
+  // Editor Formatting - Go Language
+  // ============================================================
+  "[go]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "golang.go",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit"
+    }
+  },
+
+  // ============================================================
+  // Go Language Server & Linting
+  // ============================================================
+  "go.useLanguageServer": true,
+  "go.lintOnSave": "package",
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": ["--fast"],
+
+  // ============================================================
+  // Go Test Coverage
+  // ============================================================
+  "go.coverOnSingleTest": true,
+  "go.coverOnSingleTestFile": true,
+
+  // ============================================================
+  // Spell Check
+  // ============================================================
+  "cSpell.words": [
+    "benchmem",
+    "covermode",
+    "coverprofile",
+    "DISPLAYNAME",
+    "Errorf",
+    "EXITCODE",
+    "goarch",
+    "GOARCH",
+    "gocache",
+    "GOENV",
+    "gofmt",
+    "goimports",
+    "golangci",
+    "golint",
+    "gomod",
+    "GOMODCACHE",
+    "goroutines",
+    "HKLM",
+    "Infof",
+    "JOBOBJECT",
+    "jonlabelle",
+    "ldflags",
+    "NSSM",
+    "nssmr",
+    "pathpkg",
+    "PKGS",
+    "predeclared",
+    "slashpath",
+    "SNAPTHREAD",
+    "statuscode",
+    "subkey",
+    "subkeys",
+    "subtests",
+    "svcwrap",
+    "Toolhelp",
+    "trimpath",
+    "unittests",
+    "Warnf"
+  ]
+}

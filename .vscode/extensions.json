@@ -1,0 +1,12 @@
+{
+  // ============================================================
+  // Recommended VS Code Extensions
+  // ============================================================
+  "recommendations": [
+    "golang.go",
+    "EditorConfig.EditorConfig",
+    "streetsidesoftware.code-spell-checker",
+    "DavidAnson.vscode-markdownlint",
+    "esbenp.prettier-vscode"
+  ]
+}

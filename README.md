@@ -18,37 +18,39 @@ The current milestone covers the core management commands, registry-compatible `
 
 The legacy GUI is intentionally out of scope for now. See the [compatibility notes](docs/compatibility.md) for detailed parity coverage and current gaps.
 
-## Build
+## Quick Start
 
-Source builds currently require Go `1.26.1` or newer, matching [go.mod](go.mod).
+`nssmr` wraps an existing executable and runs it as a Windows service. In the examples below, `worker.exe` is your application, not part of `nssmr`.
 
-```bash
-make test
-make build
-```
+1. Install a service for your application:
 
-Build Windows artifacts:
+   ```bash
+   nssmr install MyService "C:\apps\worker.exe" --config "C:\apps\worker.yml"
+   ```
 
-```bash
-make build-windows
-```
+   Everything after the executable is stored as `AppParameters`.
 
-This writes the host binary to `bin/` and the Windows release artifacts to:
+2. Configure the working directory, logs, and startup behavior:
 
-- `dist/nssmr-windows-amd64.exe`
-- `dist/nssmr-windows-arm64.exe`
+   ```bash
+   nssmr set MyService AppDirectory "C:\apps"
+   nssmr set MyService AppStdout "C:\logs\worker.out.log"
+   nssmr set MyService AppStderr "C:\logs\worker.err.log"
+   nssmr set MyService DisplayName "My Worker Service"
+   nssmr set MyService Start SERVICE_DELAYED_AUTO_START
+   ```
 
-Builds and most tests can run on non-Windows hosts, but `install`, service control, and the managed-process runtime only work on Windows.
+3. Start the service and inspect the stored configuration:
 
-## Usage
+   ```bash
+   nssmr start MyService
+   nssmr status MyService
+   nssmr get MyService AppParameters
+   ```
 
-Install a service:
+## More Configuration Examples
 
-```bash
-nssmr install MyService "C:\apps\worker.exe" --listen :8080
-```
-
-Update settings after install:
+After install, you can layer on more advanced behavior:
 
 ```bash
 nssmr set MyService AppDirectory "C:\apps"
@@ -75,9 +77,31 @@ nssmr rotate MyService
 nssmr dump MyService
 ```
 
-Runtime note:
+> [!NOTE]
+> The `service` subcommand is the internal SCM entrypoint used by the installed Windows service and is not intended for normal interactive use.
 
-- The `service` subcommand is the internal SCM entrypoint used by the installed Windows service and is not intended for normal interactive use.
+## Build
+
+Source builds currently require Go `1.26.1` or newer, matching [go.mod](go.mod).
+
+```bash
+make test
+make build
+```
+
+Build Windows artifacts:
+
+```bash
+make build-windows
+```
+
+This writes the host binary to `bin/` and the Windows release artifacts to:
+
+- `dist/nssmr-windows-amd64.exe`
+- `dist/nssmr-windows-arm64.exe`
+
+> [!Note]
+> You can build on non-Windows hosts and run most tests, but the `install` command, service control, and the managed-process runtime only work on Windows.
 
 ## Docs
 
@@ -91,4 +115,4 @@ Runtime note:
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+[MIT](LICENSE)

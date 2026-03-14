@@ -9,6 +9,13 @@ These pages document the current `nssmr` CLI surface in terms of what you type, 
 | [compatibility.md](compatibility.md)           | Current command and setting coverage compared with classic NSSM                     |
 | [architecture.md](architecture.md)             | Project layout and the service/runtime design used in the Go port                   |
 
+## Development
+
+Build and test instructions live in the [root README](../README.md#build).
+
+- On Windows hosts, run `.\build.ps1` from the repository root.
+- On Unix-like hosts with GNU `make`, the existing `Makefile` targets remain available.
+
 ## CLI Parameter Conventions
 
 | Placeholder      | Meaning                                               | Notes                                                                                              | Example                                        |

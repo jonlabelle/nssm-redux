@@ -1,0 +1,170 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ============================================================
+    // Build & Test
+    // ============================================================
+    {
+      "label": "nssmr: build",
+      "type": "process",
+      "command": "make",
+      "args": ["build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-File",
+          "${workspaceFolder}\\build.ps1",
+          "build"
+        ]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "nssmr: test",
+      "type": "process",
+      "command": "make",
+      "args": ["test"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": ["-NoProfile", "-File", "${workspaceFolder}\\build.ps1", "test"]
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+
+    // ============================================================
+    // Windows Artifacts
+    // ============================================================
+    {
+      "label": "nssmr: build-windows",
+      "type": "process",
+      "command": "make",
+      "args": ["build-windows"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-File",
+          "${workspaceFolder}\\build.ps1",
+          "build-windows"
+        ]
+      }
+    },
+    {
+      "label": "nssmr: build-windows-amd64",
+      "type": "process",
+      "command": "make",
+      "args": ["build-windows-amd64"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-File",
+          "${workspaceFolder}\\build.ps1",
+          "build-windows-amd64"
+        ]
+      }
+    },
+    {
+      "label": "nssmr: build-windows-arm64",
+      "type": "process",
+      "command": "make",
+      "args": ["build-windows-arm64"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-File",
+          "${workspaceFolder}\\build.ps1",
+          "build-windows-arm64"
+        ]
+      }
+    },
+
+    // ============================================================
+    // Code Quality
+    // ============================================================
+    {
+      "label": "nssmr: vet",
+      "type": "process",
+      "command": "make",
+      "args": ["vet"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": ["-NoProfile", "-File", "${workspaceFolder}\\build.ps1", "vet"]
+      }
+    },
+    {
+      "label": "nssmr: lint",
+      "type": "process",
+      "command": "make",
+      "args": ["lint"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": ["-NoProfile", "-File", "${workspaceFolder}\\build.ps1", "lint"]
+      }
+    },
+    {
+      "label": "nssmr: fmt",
+      "type": "process",
+      "command": "make",
+      "args": ["fmt"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": ["-NoProfile", "-File", "${workspaceFolder}\\build.ps1", "fmt"]
+      }
+    },
+
+    // ============================================================
+    // Cleanup
+    // ============================================================
+    {
+      "label": "nssmr: clean",
+      "type": "process",
+      "command": "make",
+      "args": ["clean"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "windows": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-File",
+          "${workspaceFolder}\\build.ps1",
+          "clean"
+        ]
+      }
+    }
+  ]
+}

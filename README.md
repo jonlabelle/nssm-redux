@@ -85,21 +85,36 @@ nssmr dump MyService
 
 Source builds currently require Go `1.26.1` or newer, matching [go.mod](go.mod).
 
+### Windows hosts (PowerShell)
+
+Use the PowerShell helper from the repository root with PowerShell 7+ (`pwsh`):
+
+```powershell
+.\build.ps1 test
+.\build.ps1 build
+.\build.ps1 build-windows
+```
+
+This writes the host binary to `bin\nssmr.exe` and the Windows release artifacts to:
+
+- `dist\nssmr-windows-amd64.exe`
+- `dist\nssmr-windows-arm64.exe`
+
+`build.ps1` keeps `GOCACHE` and `GOMODCACHE` inside the repo at `.gocache/` and `.gomodcache/`, which avoids depending on a writable user-profile cache.
+
+Run `.\build.ps1 help` to see the full task list, including `vet`, `lint`, `fmt`, and `clean`.
+
+VS Code workspace tasks are checked in under [`.vscode/tasks.json`](.vscode/tasks.json) and use `pwsh` on Windows, so you can run the same flows from `Terminal` -> `Run Task`.
+
+### Unix-like hosts (`make`)
+
+If you already have GNU `make` and a POSIX shell available, the existing `Makefile` targets still work:
+
 ```bash
 make test
 make build
-```
-
-Build Windows artifacts:
-
-```bash
 make build-windows
 ```
-
-This writes the host binary to `bin/` and the Windows release artifacts to:
-
-- `dist/nssmr-windows-amd64.exe`
-- `dist/nssmr-windows-arm64.exe`
 
 > [!Note]
 > You can build on non-Windows hosts and run most tests, but the `install` command, service control, and the managed-process runtime only work on Windows.

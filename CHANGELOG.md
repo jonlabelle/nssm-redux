@@ -2,7 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
-This project is still pre-release, so the changelog currently tracks the evolving `main` branch under `Unreleased`. Once tagged releases begin, entries will move to versioned sections.
+> [!Note]
+> This project is still pre-release, so the changelog currently tracks the evolving `main` branch under `Unreleased`. Once tagged releases begin, entries will move to versioned sections.
 
 The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project intends to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) for tagged releases.
 
@@ -10,7 +11,7 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 
 ### Added
 
-- Initial Windows-focused Go port of NSSM with a dedicated `nssmr` CLI and Windows service host.
+- Initial Go port of NSSM with a dedicated `nssmr` CLI and Windows service host.
 - Core service management commands: `install`, `remove`, `start`, `stop`, `restart`, `status`, `statuscode`, `list`, `get`, `set`, `reset`, and `dump`.
 - Extended control commands for parity with classic NSSM workflows: `pause`, `continue`, `rotate`, and `processes`.
 - Registry-backed configuration persistence using the familiar `Parameters` layout.

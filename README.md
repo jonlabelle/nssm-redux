@@ -10,27 +10,17 @@
 
 This repository is intentionally starting with a strong CLI and service-runtime core instead of trying to port the legacy GUI first. The current codebase already installs and runs arbitrary executables as Windows services, persists settings in the familiar `Parameters` registry layout, and ships CI/release automation for Windows binaries.
 
-## Current scope
+## Status
 
-Implemented in this first port slice:
+`nssmr` is an early CLI-first Go port of NSSM focused on Windows service installation, configuration, and runtime supervision.
 
-- Install, remove, start, stop, restart, pause, continue, rotate, status, list, processes, get, set, reset, and dump commands
-- Windows service hosting through `golang.org/x/sys/windows/svc`
-- Registry-backed managed-service settings compatible with the original `Parameters` layout
-- Restart policy with `AppExit`, `AppRestartDelay`, and `AppThrottle`
-- `AppEnvironment` replacement plus `AppEnvironmentExtra` merging
-- `AppDirectory`, `AppParameters`, `AppStdin`, `AppStdout`, `AppStderr`, `AppNoConsole`, and `AppKillProcessTree`
-- `AppPriority`, `AppAffinity`, and the legacy `AppStopMethod*` stop controls
-- Hook events under `AppEvents`
-- Output rotation plus timestamped log streaming through the `AppRotate*` and `AppTimestampLog` settings
-- Native service metadata updates for display name, description, startup type, dependencies, and service account
-- Tagged GitHub Actions releases for `windows/amd64` and `windows/arm64`
+The current milestone covers the core management commands, registry-compatible `Parameters` storage, restart policy, hooks, process controls, and log rotation.
 
-Out of scope for now:
-
-- Legacy GUI installer/editor
+The legacy GUI is intentionally out of scope for now. See the [compatibility notes](docs/compatibility.md) for detailed parity coverage and current gaps.
 
 ## Build
+
+Source builds currently require Go `1.26.1` or newer, matching [go.mod](go.mod).
 
 ```bash
 make test
@@ -47,6 +37,8 @@ This writes the host binary to `bin/` and the Windows release artifacts to:
 
 - `dist/nssmr-windows-amd64.exe`
 - `dist/nssmr-windows-arm64.exe`
+
+Builds and most tests can run on non-Windows hosts, but `install`, service control, and the managed-process runtime only work on Windows.
 
 ## Usage
 

@@ -42,3 +42,10 @@
 ## Out of scope
 
 - GUI install/edit/remove dialogs
+
+## Known Gaps And Intentional Differences
+
+- `nssmr` is Windows-targeted. You can build and run most tests on other platforms, but service installation, SCM control, and the managed-process runtime only work on Windows.
+- `dump` recreates the stored configuration, not the user's original shell quoting for `AppParameters`.
+- `pause` and `continue` are restart-throttle controls for SCM parity. They do not suspend and resume the managed process.
+- `AppStdout` and `AppStderr` support the core redirection and rotation workflow, but not every legacy NSSM `CreateFile` tuning knob.

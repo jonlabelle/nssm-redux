@@ -75,6 +75,33 @@ These settings are used with `nssmr get`, `nssmr set`, and `nssmr reset`.
 | `Rotate/Pre`   | Before an online log rotation request is handled                                  | `nssmr set MyService AppEvents Rotate/Pre "C:\hooks\before-rotate.cmd"`  |
 | `Rotate/Post`  | After an online log rotation request is handled                                   | `nssmr set MyService AppEvents Rotate/Post "C:\hooks\after-rotate.cmd"`  |
 
+### Hook Runtime Notes
+
+- Hooks run with a 30 second timeout. `Start/Pre` exit code `99` aborts the start or restart attempt.
+- Hooks inherit the merged service environment and receive additional `NSSM_*` variables describing the current transition.
+
+| Variable                       | Meaning |
+| ------------------------------ | ------- |
+| `NSSM_SERVICE_NAME`            | Managed service name |
+| `NSSM_SERVICE_DISPLAYNAME`     | Service display name |
+| `NSSM_COMMAND_LINE`            | Managed application plus stored `AppParameters` |
+| `NSSM_APPLICATION_PID`         | Current child PID when a managed process is running |
+| `NSSM_EVENT`                   | Hook event name such as `Start`, `Stop`, or `Rotate` |
+| `NSSM_ACTION`                  | Hook action such as `Pre`, `Post`, `Change`, or `Resume` |
+| `NSSM_TRIGGER`                 | Reason the hook fired |
+| `NSSM_LAST_CONTROL`            | Most recent service control handled by the wrapper |
+| `NSSM_START_REQUESTED_COUNT`   | Number of start attempts requested |
+| `NSSM_START_COUNT`             | Number of successful child launches |
+| `NSSM_THROTTLE_COUNT`          | Number of throttle backoff windows entered |
+| `NSSM_EXIT_COUNT`              | Number of managed-process exits observed |
+| `NSSM_EXITCODE`                | Last managed-process exit code for exit-related hooks |
+| `NSSM_RUNTIME`                 | Service wrapper runtime in milliseconds |
+| `NSSM_APPLICATION_RUNTIME`     | Current or last managed-process runtime in milliseconds |
+| `NSSM_PID`                     | `nssmr service` process ID |
+| `NSSM_DEADLINE`                | Hook timeout in milliseconds |
+
+- `NSSM_HOOK_VERSION`, `NSSM_EXE`, `NSSM_CONFIGURATION`, `NSSM_VERSION`, and `NSSM_BUILD_DATE` are also set for compatibility with classic NSSM hook conventions. Some values are currently placeholders in this early port.
+
 ## Logging And I/O
 
 | Setting              | Value format              | What it controls                                                                                                                      | Reset/default                                 | Example                                               |

@@ -74,6 +74,7 @@
     "gomod",
     "GOMODCACHE",
     "goroutines",
+    "govulncheck",
     "HKLM",
     "Infof",
     "JOBOBJECT",

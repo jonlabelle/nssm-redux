@@ -30,6 +30,30 @@
   "makefile.configureOnOpen": false,
 
   // ============================================================
+  // PowerShell
+  // ============================================================
+
+  "[powershell]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.defaultFormatter": "ms-vscode.powershell"
+  },
+
+  "powershell.codeFormatting.preset": "Allman",
+  "powershell.codeFormatting.autoCorrectAliases": true,
+  "powershell.codeFormatting.trimWhitespaceAroundPipe": true,
+  "powershell.codeFormatting.useCorrectCasing": true,
+  "powershell.codeFormatting.whitespaceBetweenParameters": true,
+  "powershell.codeFormatting.whitespaceAroundOperator": true,
+  "powershell.codeFormatting.alignPropertyValuePairs": false,
+  "powershell.codeFormatting.openBraceOnSameLine": false,
+  "powershell.codeFormatting.useConstantStrings": true,
+  "powershell.codeFormatting.avoidSemicolonsAsLineTerminators": true,
+  "powershell.promptToUpdatePowerShell": false,
+
+  // ============================================================
   // Spell Check
   // ============================================================
   "cSpell.words": [

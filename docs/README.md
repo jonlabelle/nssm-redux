@@ -7,6 +7,7 @@ These pages document the current `nssmr` CLI surface in terms of what you type, 
 | [command-reference.md](command-reference.md)   | Every CLI command, its syntax, and a copy-paste example                             |
 | [settings-reference.md](settings-reference.md) | Supported `get`/`set`/`reset` settings with accepted values, defaults, and examples |
 | [compatibility.md](compatibility.md)           | Current command and setting coverage compared with classic NSSM                     |
+| [gui-parity.md](gui-parity.md)                 | Checklist of classic NSSM GUI features that are covered, missing, or different      |
 | [architecture.md](architecture.md)             | Project layout and the service/runtime design used in the Go port                   |
 
 ## Development

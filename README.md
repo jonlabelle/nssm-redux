@@ -29,7 +29,7 @@ This repository is intentionally starting with a strong CLI and service-runtime 
 
 The current milestone covers the core management commands, registry-compatible `Parameters` storage, restart policy, hooks, process controls, and log rotation.
 
-The legacy GUI is intentionally out of scope for now. See the [compatibility notes](docs/compatibility.md) for detailed parity coverage and current gaps.
+The legacy GUI is intentionally out of scope for now. See the [compatibility notes](docs/compatibility.md) for detailed parity coverage and current gaps, and the [GUI parity checklist](docs/gui-parity.md) for a feature-by-feature comparison with classic NSSM.
 
 ## Quick Start
 

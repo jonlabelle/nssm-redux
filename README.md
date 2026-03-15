@@ -11,6 +11,18 @@
 
 This repository is intentionally starting with a strong CLI and service-runtime core instead of trying to port the legacy GUI first. The current codebase already installs and runs arbitrary executables as Windows services, persists settings in the familiar `Parameters` registry layout, and ships CI/release automation for Windows binaries.
 
+## Table of Contents
+
+- [Status](#status)
+- [Quick Start](#quick-start)
+- [More Configuration Examples](#more-configuration-examples)
+- [Build](#build)
+  - [Windows hosts (PowerShell)](#windows-hosts-powershell)
+  - [Unix-like hosts (`make`)](#unix-like-hosts-make)
+- [Docs](#docs)
+- [Credits](#credits)
+- [License](#license)
+
 ## Status
 
 `nssmr` is an early CLI-first Go port of NSSM focused on Windows service installation, configuration, and runtime supervision.
@@ -51,6 +63,9 @@ The legacy GUI is intentionally out of scope for now. See the [compatibility not
 
 ## More Configuration Examples
 
+<details>
+<summary>Show more configuration examples</summary>
+
 After install, you can layer on more advanced behavior:
 
 ```bash
@@ -81,11 +96,16 @@ nssmr dump MyService
 > [!NOTE]
 > The `service` subcommand is the internal SCM entrypoint used by the installed Windows service and is not intended for normal interactive use.
 
+</details>
+
 ## Build
 
 Source builds currently require Go `1.26.1` or newer, matching [go.mod](go.mod).
 
 ### Windows hosts (PowerShell)
+
+<details>
+<summary>Show Windows build instructions</summary>
 
 Use the PowerShell helper from the repository root with PowerShell 7+ (`pwsh`):
 
@@ -104,9 +124,14 @@ This writes the host binary to `bin\nssmr.exe` and the Windows release artifacts
 
 Run `.\build.ps1 help` to see the full task list, including `vet`, `lint`, `fmt`, and `clean`.
 
-VS Code workspace tasks are checked in under [`.vscode/tasks.json`](.vscode/tasks.json) and use `pwsh` on Windows, so you can run the same flows from `Terminal` -> `Run Task`.
+VS Code workspace tasks are under [`.vscode/tasks.json`](.vscode/tasks.json) and use `pwsh` on Windows, so you can run the same flows from `Terminal` -> `Run Task`.
+
+</details>
 
 ### Unix-like hosts (`make`)
+
+<details>
+<summary>Show Unix-like build instructions</summary>
 
 If you already have GNU `make` and a POSIX shell available, the existing `Makefile` targets still work:
 
@@ -118,6 +143,8 @@ make build-windows
 
 > [!Note]
 > You can build on non-Windows hosts and run most tests, but the `install` command, service control, and the managed-process runtime only work on Windows.
+
+</details>
 
 ## Docs
 

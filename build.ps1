@@ -38,6 +38,10 @@
         Target Windows architecture list used by build-windows.
         Supported values are amd64 and arm64.
 
+    .PARAMETER VersionInfoFile
+        JSON file describing Windows VERSIONINFO string fields. Defaults to
+        ./build/windows-versioninfo.json.
+
     .PARAMETER Version
         Version string embedded into the binary. If not supplied, the script attempts
         to derive it from git describe and falls back to dev.
@@ -66,6 +70,11 @@
         PS > .\build.ps1 build -Version v0.3.0
 
         Builds the host binary and embeds v0.3.0 as the application version.
+
+    .EXAMPLE
+        PS > .\build.ps1 build-windows -VersionInfoFile .\build\windows-versioninfo.json
+
+        Builds the Windows binaries with VERSIONINFO fields from the supplied JSON file.
 #>
 [CmdletBinding()]
 param(
@@ -98,6 +107,9 @@ param(
     [ValidateSet('amd64', 'arm64')]
     [string[]]
     $WindowsArch = @('amd64', 'arm64'),
+
+    [string]
+    $VersionInfoFile = (Join-Path -Path $PSScriptRoot -ChildPath 'build/windows-versioninfo.json'),
 
     [string]$Version
 )
@@ -229,10 +241,15 @@ function Invoke-WindowsBuild
 
     New-Item -ItemType Directory -Force -Path $Dist | Out-Null
     $output = Join-Path -Path $Dist -ChildPath "$App-windows-$Arch.exe"
-    Invoke-Go -Arguments @('build', '-trimpath', '-ldflags', $script:LinkerFlags, '-o', $output, $Source) -Environment @{
-        GOOS = 'windows'
-        GOARCH = $Arch
-    }
+    Invoke-Go -Arguments @(
+        'run',
+        './internal/tools/winbuild',
+        '-source', $Source,
+        '-out', $output,
+        '-arch', $Arch,
+        '-version', $script:BuildVersion,
+        '-versioninfo', $VersionInfoFile
+    )
 }
 
 function Invoke-FormattingCheck
@@ -284,6 +301,7 @@ Examples:
   .\build.ps1 test build
   .\build.ps1 build-windows
   .\build.ps1 build-windows -WindowsArch amd64
+  .\build.ps1 build-windows -VersionInfoFile .\build\windows-versioninfo.json
 '@ | Write-Output
 }
 

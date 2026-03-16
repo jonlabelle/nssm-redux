@@ -11,6 +11,7 @@ LDFLAGS ?= -s -w -X github.com/jonlabelle/nssm-redux/internal/cli.Version=$(VERS
 HOST_GOOS ?= $(shell $(GO) env GOOS)
 HOST_EXE := $(if $(filter windows,$(HOST_GOOS)),.exe,)
 WINDOWS_ARCHES ?= amd64 arm64
+WINDOWS_VERSIONINFO ?= $(CURDIR)/build/windows-versioninfo.json
 
 GOENV = GOCACHE=$(GOCACHE)
 ifneq ($(strip $(GOMODCACHE)),)
@@ -29,11 +30,11 @@ build-windows: $(WINDOWS_ARCHES:%=build-windows-%) ## Build Windows binaries for
 
 build-windows-amd64: ## Build dist/nssmr-windows-amd64.exe
 	@mkdir -p "$(DIST)"
-	$(GOENV) CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o "$(DIST)/$(APP)-windows-amd64.exe" $(CMD)
+	$(GOENV) CGO_ENABLED=0 $(GO) run ./internal/tools/winbuild -source "$(CMD)" -out "$(DIST)/$(APP)-windows-amd64.exe" -arch amd64 -version "$(VERSION)" -versioninfo "$(WINDOWS_VERSIONINFO)"
 
 build-windows-arm64: ## Build dist/nssmr-windows-arm64.exe
 	@mkdir -p "$(DIST)"
-	$(GOENV) CGO_ENABLED=0 GOOS=windows GOARCH=arm64 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o "$(DIST)/$(APP)-windows-arm64.exe" $(CMD)
+	$(GOENV) CGO_ENABLED=0 $(GO) run ./internal/tools/winbuild -source "$(CMD)" -out "$(DIST)/$(APP)-windows-arm64.exe" -arch arm64 -version "$(VERSION)" -versioninfo "$(WINDOWS_VERSIONINFO)"
 
 test: ## Run the Go test suite
 	$(GOENV) $(GO) test $(PKGS)

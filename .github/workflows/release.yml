@@ -30,15 +30,12 @@ jobs:
           cache: true
 
       - name: Build release binary
-        env:
-          GOOS: windows
-          GOARCH: ${{ matrix.goarch }}
         run: |
-          mkdir -p "dist/package/nssmr-windows-${GOARCH}"
-          go build -trimpath -ldflags "-s -w -X github.com/jonlabelle/nssm-redux/internal/cli.Version=${GITHUB_REF_NAME}" -o "dist/package/nssmr-windows-${GOARCH}/nssmr.exe" ./cmd/nssmr
-          cp README.md LICENSE "dist/package/nssmr-windows-${GOARCH}/"
+          mkdir -p "dist/package/nssmr-windows-${{ matrix.goarch }}"
+          go run ./internal/tools/winbuild -source ./cmd/nssmr -out "dist/package/nssmr-windows-${{ matrix.goarch }}/nssmr.exe" -arch ${{ matrix.goarch }} -version "${GITHUB_REF_NAME}" -versioninfo ./build/windows-versioninfo.json
+          cp README.md LICENSE "dist/package/nssmr-windows-${{ matrix.goarch }}/"
           cd dist/package
-          zip -r "../nssmr-windows-${GOARCH}.zip" "nssmr-windows-${GOARCH}"
+          zip -r "../nssmr-windows-${{ matrix.goarch }}.zip" "nssmr-windows-${{ matrix.goarch }}"
 
       - name: Upload release artifact
         uses: actions/upload-artifact@main

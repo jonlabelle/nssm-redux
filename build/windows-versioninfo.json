@@ -1,0 +1,18 @@
+{
+  "langId": 1033,
+  "charsetId": 1200,
+  "fileVersion": "",
+  "productVersion": "",
+  "fixedFileVersion": "",
+  "fixedProductVersion": "",
+  "comments": "CLI-first Go port of NSSM for Windows service installation, configuration, and runtime supervision.",
+  "companyName": "Jon LaBelle",
+  "fileDescription": "nssmr - Non-Sucking Service Manager Redux",
+  "internalName": "nssmr",
+  "legalCopyright": "Copyright (c) Jon LaBelle",
+  "legalTrademarks": "",
+  "originalFilename": "nssmr.exe",
+  "privateBuild": "",
+  "productName": "nssmr (Non-Sucking Service Manager Redux)",
+  "specialBuild": ""
+}

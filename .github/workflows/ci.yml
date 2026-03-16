@@ -76,12 +76,9 @@ jobs:
 
       - name: Build
         shell: pwsh
-        env:
-          GOOS: windows
-          GOARCH: ${{ matrix.goarch }}
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          go build -trimpath -ldflags "-s -w -X github.com/jonlabelle/nssm-redux/internal/cli.Version=${GITHUB_SHA}" -o "dist/nssmr-windows-${GOARCH}.exe" ./cmd/nssmr
+          go run ./internal/tools/winbuild -source ./cmd/nssmr -out "dist/nssmr-windows-${{ matrix.goarch }}.exe" -arch ${{ matrix.goarch }} -version "${env:GITHUB_SHA}" -versioninfo ./build/windows-versioninfo.json
 
       - name: Upload build artifact
         uses: actions/upload-artifact@main

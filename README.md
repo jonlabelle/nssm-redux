@@ -123,6 +123,8 @@ This writes the host binary to `bin\nssmr.exe` and the Windows release artifacts
 
 `build.ps1` keeps `GOCACHE` and `GOMODCACHE` inside the repo at `.gocache/` and `.gomodcache/`, which avoids depending on a writable user-profile cache.
 
+Windows VERSIONINFO fields are read from [`build/windows-versioninfo.json`](build/windows-versioninfo.json). Edit that file to change the embedded product metadata, or point `build.ps1` at another JSON file with `-VersionInfoFile`.
+
 Run `.\build.ps1 help` to see the full task list, including `vet`, `lint`, `fmt`, and `clean`.
 
 VS Code workspace tasks are under [`.vscode/tasks.json`](.vscode/tasks.json) and use `pwsh` on Windows, so you can run the same flows from `Terminal` -> `Run Task`.
@@ -144,6 +146,8 @@ make build-windows
 
 > [!Note]
 > You can build on non-Windows hosts and run most tests, but the `install` command, service control, and the managed-process runtime only work on Windows.
+
+Windows cross-builds also embed VERSIONINFO metadata from [`build/windows-versioninfo.json`](build/windows-versioninfo.json). You can override that path with `make build-windows WINDOWS_VERSIONINFO=/path/to/versioninfo.json`.
 
 </details>
 

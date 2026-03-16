@@ -128,13 +128,27 @@ func TestGenerateResourceObject(t *testing.T) {
 func TestParseFixedVersion(t *testing.T) {
 	t.Parallel()
 
-	got, err := parseFixedVersion("v2.10.3-rc1")
-	if err != nil {
-		t.Fatalf("parseFixedVersion: %v", err)
+	tests := []struct {
+		input string
+		want  fixedVersion
+	}{
+		{"v2.10.3-rc1", fixedVersion{2, 10, 3, 0}},
+		{"v1.2.3-5-g5f53228", fixedVersion{1, 2, 3, 0}},
+		{"1.2.3.4", fixedVersion{1, 2, 3, 4}},
+		// Bare commit hashes must not be misread as a major version number.
+		{"5f53228", fixedVersion{0, 0, 0, 0}},
+		{"abc1234", fixedVersion{0, 0, 0, 0}},
+		{"dev", fixedVersion{0, 0, 0, 0}},
+		{"", fixedVersion{0, 0, 0, 0}},
 	}
 
-	want := fixedVersion{2, 10, 3, 0}
-	if got != want {
-		t.Fatalf("parseFixedVersion returned %#v, want %#v", got, want)
+	for _, tc := range tests {
+		got, err := parseFixedVersion(tc.input)
+		if err != nil {
+			t.Fatalf("parseFixedVersion(%q): %v", tc.input, err)
+		}
+		if got != tc.want {
+			t.Fatalf("parseFixedVersion(%q) = %#v, want %#v", tc.input, got, tc.want)
+		}
 	}
 }

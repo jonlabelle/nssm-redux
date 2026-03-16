@@ -471,6 +471,8 @@ func parseFixedVersion(value string) (fixedVersion, error) {
 
 	var prefix strings.Builder
 	seenDigit := false
+	seenDot := false
+	stoppedEarly := false
 	for _, r := range trimmed {
 		switch {
 		case r >= '0' && r <= '9':
@@ -478,15 +480,24 @@ func parseFixedVersion(value string) (fixedVersion, error) {
 			seenDigit = true
 		case r == '.' && seenDigit:
 			prefix.WriteRune(r)
+			seenDot = true
 		default:
 			if !seenDigit {
 				return version, nil
 			}
+			stoppedEarly = true
 			goto parse
 		}
 	}
 
 parse:
+	// If we stopped early on a non-version character without ever seeing a dot,
+	// the input looks like a git commit hash (e.g. "5f53228") rather than a
+	// version number. Return the zero version instead of misinterpreting the
+	// leading digit as a major version.
+	if stoppedEarly && !seenDot {
+		return version, nil
+	}
 	value = strings.Trim(prefix.String(), ".")
 	if value == "" {
 		return version, nil

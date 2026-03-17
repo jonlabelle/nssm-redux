@@ -57,6 +57,7 @@
   // Spell Check
   // ============================================================
   "cSpell.words": [
+    "autobuild",
     "benchmem",
     "covermode",
     "coverprofile",

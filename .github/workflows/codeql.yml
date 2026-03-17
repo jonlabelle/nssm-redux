@@ -26,7 +26,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["go"]
+        include:
+          - language: go
+            build-mode: autobuild
+          - language: actions
+            build-mode: none
 
     steps:
       - name: Checkout repository
@@ -42,9 +46,11 @@ jobs:
         uses: github/codeql-action/init@main
         with:
           languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
       - name: Auto-build
         uses: github/codeql-action/autobuild@main
+        if: ${{ matrix.build-mode == 'autobuild' }}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@main

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -511,11 +512,11 @@ parse:
 		if part == "" {
 			continue
 		}
-		component, err := strconv.Atoi(part)
-		if err != nil {
+		component, err := strconv.ParseUint(part, 10, 16)
+		if err != nil && !errors.Is(err, strconv.ErrRange) {
 			return version, fmt.Errorf("invalid numeric component %q", part)
 		}
-		if component > 0xffff {
+		if err != nil {
 			component = 0xffff
 		}
 		version[index] = uint16(component)

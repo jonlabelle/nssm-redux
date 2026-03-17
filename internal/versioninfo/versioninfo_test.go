@@ -135,6 +135,8 @@ func TestParseFixedVersion(t *testing.T) {
 		{"v2.10.3-rc1", fixedVersion{2, 10, 3, 0}},
 		{"v1.2.3-5-g5f53228", fixedVersion{1, 2, 3, 0}},
 		{"1.2.3.4", fixedVersion{1, 2, 3, 4}},
+		{"70000.2.3.4", fixedVersion{0xffff, 2, 3, 4}},
+		{"999999999999999999999999.1", fixedVersion{0xffff, 1, 0, 0}},
 		// Bare commit hashes must not be misread as a major version number.
 		{"5f53228", fixedVersion{0, 0, 0, 0}},
 		{"abc1234", fixedVersion{0, 0, 0, 0}},

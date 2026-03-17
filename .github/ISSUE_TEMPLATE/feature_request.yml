@@ -1,0 +1,85 @@
+name: Feature request
+description: Suggest a new capability, parity improvement, or workflow enhancement for nssmr.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea.
+
+        `nssmr` is still in early in development, so the most helpful requests explain the concrete workflow problem, whether the request is classic NSSM parity or new behavior, and how it fits the current scope.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched the existing issues and did not find a duplicate.
+          required: true
+        - label: I reviewed the README and compatibility notes first.
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Request area
+      options:
+        - CLI command or flag
+        - service or runtime behavior
+        - registry-backed settings
+        - hooks or AppEvents
+        - logging or log rotation
+        - Windows service account or SCM behavior
+        - build, packaging, or release process
+        - documentation
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: parity
+    attributes:
+      label: How does this relate to classic NSSM?
+      options:
+        - It exists in classic NSSM and is missing here
+        - It behaves differently from classic NSSM
+        - It is a new capability beyond classic NSSM
+        - I am not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the real workflow or operational need behind the request.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+      description: Describe the behavior, command shape, or configuration you would expect.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Example use case
+      description: Share a concrete service setup, command sequence, or production scenario where this would help.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe any workarounds, current commands, or related tools you tried.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add links, prior art, compatibility notes, or screenshots if helpful.

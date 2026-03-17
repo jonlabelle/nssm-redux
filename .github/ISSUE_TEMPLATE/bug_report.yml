@@ -1,0 +1,110 @@
+name: Bug report
+description: Report incorrect behavior in nssmr, its CLI, or the managed-service runtime.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve `nssmr`.
+
+        Please do not use this form for security vulnerabilities or public exploit reports. Follow the private reporting instructions in `SECURITY.md` instead.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched the existing issues and did not find a duplicate.
+          required: true
+        - label: This report is not about a security vulnerability or exploit chain.
+          required: true
+        - label: I reviewed the relevant docs and compatibility notes before filing.
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: Pick the part of the project that best matches the problem.
+      options:
+        - install/remove
+        - start/stop/restart/status
+        - get/set/reset/dump
+        - managed-process runtime
+        - hooks or AppEvents
+        - logging or log rotation
+        - build or release artifacts
+        - documentation or examples
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tested_code
+    attributes:
+      label: What code did you test?
+      options:
+        - latest main branch
+        - latest tagged release
+        - another commit, branch, or fork
+        - not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: nssmr version details
+      description: Include `nssmr version` output, a commit SHA, branch name, or release asset name.
+      placeholder: main @ abc1234, or nssmr version output
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Windows version and architecture
+      description: Include the OS version and whether this is amd64 or arm64.
+      placeholder: Windows 11 24H2 amd64
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Share the exact commands, settings, and sequence needed to reproduce the issue.
+      placeholder: |
+        1. Run `nssmr install ...`
+        2. Run `nssmr set ...`
+        3. Start the service
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant configuration, logs, or output
+      description: Paste `nssmr dump`, service settings, stderr/stdout excerpts, or any other details that help triage the problem.
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Include whether the issue depends on a specific service account, hook, registry value, or non-default configuration.

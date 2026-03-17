@@ -1,0 +1,72 @@
+name: Documentation issue
+description: Report missing, incorrect, confusing, or outdated documentation.
+title: "[Docs]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for problems in `README.md`, `docs/`, examples, or release notes.
+
+        If the problem is actually a bug in the code, please use the bug report form instead.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched the existing issues and did not find a duplicate.
+          required: true
+        - label: I checked the current README and docs pages before filing.
+          required: true
+
+  - type: input
+    id: page
+    attributes:
+      label: Affected page or file
+      description: List the page, section, or path that needs attention.
+      placeholder: README.md, docs/compatibility.md, or a specific section heading
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: What kind of documentation issue is this?
+      options:
+        - incorrect information
+        - missing information
+        - outdated information
+        - example does not work
+        - unclear wording or structure
+        - typo or formatting issue
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_problem
+    attributes:
+      label: What is wrong or missing?
+      description: Explain what confused you, what is inaccurate, or what information is absent.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested_change
+    attributes:
+      label: Suggested improvement
+      description: Describe the change that would make the docs clearer or more accurate.
+    validations:
+      required: true
+
+  - type: textarea
+    id: commands
+    attributes:
+      label: Relevant commands, output, or examples
+      description: Paste any commands or output that show the mismatch between the docs and actual behavior.
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context

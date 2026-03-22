@@ -56,7 +56,7 @@ func (p *Process) Stop() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("open managed process: %w", err)
 	}
-	defer windows.CloseHandle(handle)
+	defer func() { _ = windows.CloseHandle(handle) }()
 
 	exited, err := processExited(handle)
 	if err != nil {
@@ -202,12 +202,12 @@ func sendConsoleCtrlC(pid uint32) (bool, error) {
 			return false, err
 		}
 	}
-	defer procFreeConsole.Call()
+	defer func() { _, _, _ = procFreeConsole.Call() }()
 
 	if err := setConsoleCtrlHandler(true); err != nil {
 		return false, err
 	}
-	defer procSetConsoleCtrlHandler.Call(0, 0)
+	defer func() { _, _, _ = procSetConsoleCtrlHandler.Call(0, 0) }()
 
 	if err := windows.GenerateConsoleCtrlEvent(ctrlCEvent, 0); err != nil {
 		return false, err
@@ -248,7 +248,7 @@ func postThreadQuit(pid uint32) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer windows.CloseHandle(snapshot)
+	defer func() { _ = windows.CloseHandle(snapshot) }()
 
 	entry := windows.ThreadEntry32{Size: uint32(unsafe.Sizeof(windows.ThreadEntry32{}))}
 	if err := windows.Thread32First(snapshot, &entry); err != nil {

@@ -66,7 +66,11 @@ func TestGenerateResourceObject(t *testing.T) {
 			if err != nil {
 				t.Fatalf("pe.Open(%q): %v", filename, err)
 			}
-			defer file.Close()
+			defer func() {
+				if err := file.Close(); err != nil {
+					t.Errorf("file.Close() failed: %v", err)
+				}
+			}()
 
 			if file.FileHeader.Machine != testCase.machine {
 				t.Fatalf("machine = %#x, want %#x", file.FileHeader.Machine, testCase.machine)

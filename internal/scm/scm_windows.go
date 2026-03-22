@@ -42,7 +42,7 @@ func Install(selfPath string, service config.Service) error {
 	if err != nil {
 		return fmt.Errorf("connect to service manager: %w", err)
 	}
-	defer manager.Disconnect()
+	defer func() { _ = manager.Disconnect() }()
 
 	startType, delayed, err := mapStartup(service.Startup)
 	if err != nil {
@@ -63,7 +63,7 @@ func Install(selfPath string, service config.Service) error {
 	if err != nil {
 		return fmt.Errorf("create service: %w", err)
 	}
-	defer svcHandle.Close()
+	defer func() { _ = svcHandle.Close() }()
 
 	if err := saveParameters(service); err != nil {
 		_ = svcHandle.Delete()
@@ -79,8 +79,8 @@ func Load(name string) (config.Service, error) {
 	if err != nil {
 		return config.Service{}, err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	service := config.Default(name)
 	service.DisplayName = scmConfig.DisplayName
@@ -105,8 +105,8 @@ func Save(service config.Service) error {
 	if err != nil {
 		return err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	startType, delayed, err := mapStartup(service.Startup)
 	if err != nil {
@@ -133,8 +133,8 @@ func Remove(name string) error {
 	if err != nil {
 		return err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	if err := serviceHandle.Delete(); err != nil {
 		return fmt.Errorf("delete service: %w", err)
@@ -148,8 +148,8 @@ func Start(name string) error {
 	if err != nil {
 		return err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	status, err := serviceHandle.Query()
 	if err == nil && status.State == svc.Running {
@@ -168,8 +168,8 @@ func Stop(name string) error {
 	if err != nil {
 		return err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	status, err := serviceHandle.Query()
 	if err == nil && status.State == svc.Stopped {
@@ -195,8 +195,8 @@ func Query(name string) (ServiceStatus, error) {
 	if err != nil {
 		return ServiceStatus{}, err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	status, err := serviceHandle.Query()
 	if err != nil {
@@ -218,7 +218,7 @@ func ListManaged() ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect to service manager: %w", err)
 	}
-	defer manager.Disconnect()
+	defer func() { _ = manager.Disconnect() }()
 
 	services, err := manager.ListServices()
 	if err != nil {
@@ -339,7 +339,7 @@ func saveParameters(service config.Service) error {
 	if err != nil {
 		return fmt.Errorf("open parameters registry: %w", err)
 	}
-	defer key.Close()
+	defer func() { _ = key.Close() }()
 
 	if err := setExpandString(key, string(config.SettingApplication), service.Executable); err != nil {
 		return err
@@ -435,7 +435,7 @@ func loadParameters(service *config.Service) error {
 		}
 		return fmt.Errorf("open parameters registry: %w", err)
 	}
-	defer key.Close()
+	defer func() { _ = key.Close() }()
 
 	executable, _, err := key.GetStringValue(string(config.SettingApplication))
 	if err != nil {
@@ -491,7 +491,7 @@ func saveExitActions(service config.Service) error {
 	if err != nil {
 		return fmt.Errorf("open exit action registry: %w", err)
 	}
-	defer key.Close()
+	defer func() { _ = key.Close() }()
 
 	defaultAction := service.DefaultExitAction
 	if defaultAction == "" {
@@ -521,7 +521,7 @@ func loadExitActions(service *config.Service) error {
 		}
 		return fmt.Errorf("open exit action registry: %w", err)
 	}
-	defer key.Close()
+	defer func() { _ = key.Close() }()
 
 	if value, _, err := key.GetStringValue(""); err == nil {
 		action, err := parseExitAction(value)
@@ -564,7 +564,7 @@ func isManaged(name string) (bool, error) {
 		}
 		return false, fmt.Errorf("open parameters registry: %w", err)
 	}
-	defer key.Close()
+	defer func() { _ = key.Close() }()
 
 	_, _, err = key.GetStringValue(string(config.SettingApplication))
 	if err == nil {

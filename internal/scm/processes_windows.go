@@ -30,8 +30,8 @@ func ProcessTreeForService(name string) (ProcessTree, error) {
 	if err != nil {
 		return ProcessTree{}, err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	status, err := serviceHandle.Query()
 	if err != nil {
@@ -50,7 +50,7 @@ func ProcessTreeForService(name string) (ProcessTree, error) {
 	if err != nil {
 		return ProcessTree{}, fmt.Errorf("create process snapshot: %w", err)
 	}
-	defer windows.CloseHandle(snapshot)
+	defer func() { _ = windows.CloseHandle(snapshot) }()
 
 	entries, err := readProcessEntries(snapshot)
 	if err != nil {
@@ -121,7 +121,7 @@ func processCreationTime(pid uint32) (windows.Filetime, error) {
 	if err != nil {
 		return windows.Filetime{}, fmt.Errorf("open process %d: %w", pid, err)
 	}
-	defer windows.CloseHandle(handle)
+	defer func() { _ = windows.CloseHandle(handle) }()
 
 	var creation, exit, kernel, user windows.Filetime
 	if err := windows.GetProcessTimes(handle, &creation, &exit, &kernel, &user); err != nil {
@@ -135,7 +135,7 @@ func queryProcessImage(pid uint32) string {
 	if err != nil {
 		return fmt.Sprintf("PID %d", pid)
 	}
-	defer windows.CloseHandle(handle)
+	defer func() { _ = windows.CloseHandle(handle) }()
 
 	buffer := make([]uint16, windows.MAX_PATH)
 	size := uint32(len(buffer))

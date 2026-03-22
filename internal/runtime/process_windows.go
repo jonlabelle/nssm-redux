@@ -270,7 +270,7 @@ func attachIO(cmd *exec.Cmd, service config.Service, dir string) ([]*os.File, *l
 func closeFiles(files []*os.File) {
 	for _, file := range files {
 		if file != nil {
-			file.Close()
+			_ = file.Close()
 		}
 	}
 }
@@ -314,7 +314,7 @@ func configureManagedProcess(pid uint32, service config.Service) (windows.Handle
 	if err != nil {
 		return 0, fmt.Errorf("open managed process: %w", err)
 	}
-	defer windows.CloseHandle(handle)
+	defer func() { _ = windows.CloseHandle(handle) }()
 
 	var firstErr error
 	if service.Priority != "" && service.Priority != config.PriorityNormal {
@@ -347,7 +347,7 @@ func createProcessJob(processHandle windows.Handle) (windows.Handle, error) {
 	}
 
 	if err := windows.AssignProcessToJobObject(job, processHandle); err != nil {
-		windows.CloseHandle(job)
+		_ = windows.CloseHandle(job)
 		return 0, err
 	}
 
@@ -389,7 +389,7 @@ func (p *Process) closeJob() {
 	if p.job == 0 {
 		return
 	}
-	windows.CloseHandle(p.job)
+	_ = windows.CloseHandle(p.job)
 	p.job = 0
 }
 

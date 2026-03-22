@@ -19,8 +19,8 @@ func GetObjectName(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	if strings.TrimSpace(cfg.ServiceStartName) == "" {
 		return localSystemAccount, nil
@@ -33,8 +33,8 @@ func SetObjectName(name, username, password string) error {
 	if err != nil {
 		return err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	account, secret, err := normalizeObjectName(name, username, password)
 	if err != nil {

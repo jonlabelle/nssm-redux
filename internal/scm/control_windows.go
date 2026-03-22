@@ -24,7 +24,7 @@ func Rotate(name string) error {
 	if err != nil {
 		return err
 	}
-	defer serviceHandle.Close()
+	defer func() { _ = serviceHandle.Close() }()
 
 	if _, err := serviceHandle.Control(rotateControl); err != nil {
 		return fmt.Errorf("rotate service: %w", err)
@@ -37,8 +37,8 @@ func control(name string, command svc.Cmd, okStates ...svc.State) error {
 	if err != nil {
 		return err
 	}
-	defer manager.Disconnect()
-	defer serviceHandle.Close()
+	defer func() { _ = manager.Disconnect() }()
+	defer func() { _ = serviceHandle.Close() }()
 
 	if _, err := serviceHandle.Control(command); err != nil {
 		return fmt.Errorf("control service: %w", err)

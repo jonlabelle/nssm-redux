@@ -338,7 +338,7 @@ func newLogger() *serviceLogger {
 
 func (l *serviceLogger) Close() {
 	if l.event != nil {
-		l.event.Close()
+		_ = l.event.Close()
 	}
 }
 

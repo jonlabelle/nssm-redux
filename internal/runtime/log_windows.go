@@ -114,7 +114,7 @@ func (s *logSink) canRotateOnline() bool {
 
 func (s *logSink) run() {
 	defer close(s.done)
-	defer s.reader.Close()
+	defer func() { _ = s.reader.Close() }()
 
 	if err := rotateExistingFile(s.path, s.rotation); err != nil {
 		s.done <- err
@@ -295,7 +295,7 @@ func openLogFile(path string) (*os.File, uint64, error) {
 	}
 	info, err := file.Stat()
 	if err != nil {
-		file.Close()
+		_ = file.Close()
 		return nil, 0, err
 	}
 	return file, uint64(info.Size()), nil

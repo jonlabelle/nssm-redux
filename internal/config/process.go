@@ -46,6 +46,16 @@ const (
 // StopMethodAll includes every supported stop method bit.
 const StopMethodAll = StopMethodConsole | StopMethodWindow | StopMethodThreads | StopMethodTerminate
 
+// Enabled resolves the legacy bitmask into active stop phases.
+func (m StopMethodSkip) Enabled() StopMethodSkip {
+	return StopMethodAll &^ m
+}
+
+// Has reports whether the given method is set in the mask.
+func (m StopMethodSkip) Has(method StopMethodSkip) bool {
+	return m&method != 0
+}
+
 // WindowsValue converts a priority class into the DWORD stored by NSSM.
 func (p PriorityClass) WindowsValue() uint32 {
 	switch p {
@@ -181,21 +191,21 @@ func FormatAffinityMask(mask AffinityMask) string {
 }
 
 // EnabledStopMethods resolves the legacy bitmask into active stop phases.
-func (s Service) EnabledStopMethods() StopMethodSkip {
-	return StopMethodAll &^ s.StopMethodSkip
+func (s *Service) EnabledStopMethods() StopMethodSkip {
+	return s.StopMethodSkip.Enabled()
 }
 
 // StopWaitHint returns the total graceful-stop wait budget.
-func (s Service) StopWaitHint() time.Duration {
+func (s *Service) StopWaitHint() time.Duration {
 	var total time.Duration
 	methods := s.EnabledStopMethods()
-	if methods&StopMethodConsole != 0 {
+	if methods.Has(StopMethodConsole) {
 		total += s.StopConsoleDelay
 	}
-	if methods&StopMethodWindow != 0 {
+	if methods.Has(StopMethodWindow) {
 		total += s.StopWindowDelay
 	}
-	if methods&StopMethodThreads != 0 {
+	if methods.Has(StopMethodThreads) {
 		total += s.StopThreadsDelay
 	}
 	return total

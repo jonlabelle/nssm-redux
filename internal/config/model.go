@@ -82,8 +82,8 @@ func Default(name string) Service {
 }
 
 // Clone returns a deep copy of the service configuration.
-func (s Service) Clone() Service {
-	clone := s
+func (s *Service) Clone() Service {
+	clone := *s
 	clone.Environment = append([]string(nil), s.Environment...)
 	clone.EnvironmentExtra = append([]string(nil), s.EnvironmentExtra...)
 	clone.Dependencies = append([]string(nil), s.Dependencies...)
@@ -148,7 +148,7 @@ func (s *Service) Validate() error {
 	if !validExitAction(s.DefaultExitAction) {
 		return fmt.Errorf("unsupported default exit action %q", s.DefaultExitAction)
 	}
-	if s.StopMethodSkip&^StopMethodAll != 0 {
+	if (s.StopMethodSkip &^ StopMethodAll) != 0 {
 		return fmt.Errorf("unsupported stop method skip mask %#x", uint32(s.StopMethodSkip))
 	}
 	if s.StopConsoleDelay < 0 || s.StopWindowDelay < 0 || s.StopThreadsDelay < 0 {
@@ -179,7 +179,7 @@ func (s *Service) Validate() error {
 }
 
 // ExitActionFor resolves the action for a process exit code.
-func (s Service) ExitActionFor(code int) ExitAction {
+func (s *Service) ExitActionFor(code int) ExitAction {
 	if action, ok := s.ExitActions[code]; ok {
 		return action
 	}
@@ -190,7 +190,7 @@ func (s Service) ExitActionFor(code int) ExitAction {
 }
 
 // SortedExitCodes returns configured exit-action codes in ascending order.
-func (s Service) SortedExitCodes() []int {
+func (s *Service) SortedExitCodes() []int {
 	codes := make([]int, 0, len(s.ExitActions))
 	for code := range s.ExitActions {
 		codes = append(codes, code)

@@ -70,7 +70,7 @@ func (p *Process) Stop() (bool, error) {
 	methods := p.service.EnabledStopMethods()
 	pid := uint32(p.cmd.Process.Pid)
 
-	if methods&config.StopMethodConsole != 0 {
+	if methods.Has(config.StopMethodConsole) {
 		signaled, err := sendConsoleCtrlC(pid)
 		if err != nil {
 			warnErr = joinRuntimeError(warnErr, fmt.Errorf("console stop method: %w", err))
@@ -86,7 +86,7 @@ func (p *Process) Stop() (bool, error) {
 		}
 	}
 
-	if methods&config.StopMethodWindow != 0 {
+	if methods.Has(config.StopMethodWindow) {
 		signaled, err := postWindowClose(pid)
 		if err != nil {
 			warnErr = joinRuntimeError(warnErr, fmt.Errorf("window stop method: %w", err))
@@ -102,7 +102,7 @@ func (p *Process) Stop() (bool, error) {
 		}
 	}
 
-	if methods&config.StopMethodThreads != 0 {
+	if methods.Has(config.StopMethodThreads) {
 		signaled, err := postThreadQuit(pid)
 		if err != nil {
 			warnErr = joinRuntimeError(warnErr, fmt.Errorf("thread stop method: %w", err))
@@ -118,7 +118,7 @@ func (p *Process) Stop() (bool, error) {
 		}
 	}
 
-	if methods&config.StopMethodTerminate == 0 {
+	if !methods.Has(config.StopMethodTerminate) {
 		return true, warnErr
 	}
 

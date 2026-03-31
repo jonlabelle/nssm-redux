@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ringGrad" x1="180" y1="160" x2="860" y2="864" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#27D3C3"/>
+      <stop offset="1" stop-color="#2D7FF9"/>
+    </linearGradient>
+    <linearGradient id="coreGrad" x1="300" y1="300" x2="730" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0C1B2A"/>
+      <stop offset="1" stop-color="#14253C"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="330" y1="220" x2="760" y2="830" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5DE7DB"/>
+      <stop offset="1" stop-color="#73A5FF"/>
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 0.22 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+
+  <!-- Transparent-friendly badge -->
+  <g filter="url(#softGlow)">
+    <circle cx="512" cy="512" r="312" fill="url(#coreGrad)"/>
+    <circle cx="512" cy="512" r="312" stroke="url(#ringGrad)" stroke-width="28"/>
+  </g>
+
+  <!-- Eight service/gear tabs -->
+  <g fill="url(#ringGrad)">
+    <rect x="484" y="92" width="56" height="110" rx="18"/>
+    <rect x="484" y="822" width="56" height="110" rx="18"/>
+    <rect x="822" y="484" width="110" height="56" rx="18"/>
+    <rect x="92" y="484" width="110" height="56" rx="18"/>
+
+    <g transform="rotate(45 512 512)">
+      <rect x="484" y="92" width="56" height="110" rx="18"/>
+      <rect x="484" y="822" width="56" height="110" rx="18"/>
+      <rect x="822" y="484" width="110" height="56" rx="18"/>
+      <rect x="92" y="484" width="110" height="56" rx="18"/>
+    </g>
+  </g>
+
+  <!-- Core panel -->
+  <rect x="284" y="284" width="456" height="456" rx="86" fill="url(#coreGrad)" stroke="#7AE8DC" stroke-opacity="0.22" stroke-width="4"/>
+
+  <!-- Stylized N monogram suggesting service flow / redux -->
+  <path d="M360 685V339L664 685V339" stroke="url(#accentGrad)" stroke-width="74" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Small registry / Windows-service inspired nodes -->
+
+  <!-- Inner ring -->
+  <circle cx="512" cy="512" r="246" stroke="#B7F6F0" stroke-opacity="0.12" stroke-width="12"/>
+
+  <title>NSSM Redux logo</title>
+  <desc>
+    Vector logo for nssm-redux: a Go-powered, CLI-first Windows service manager.
+    The gear tabs represent service management; the central monogram and prompt
+    imply a command-line tool; the looping arrow suggests supervision and restart behavior.
+  </desc>
+</svg>

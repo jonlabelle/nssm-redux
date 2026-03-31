@@ -6,6 +6,8 @@
 [![go reference](https://pkg.go.dev/badge/github.com/jonlabelle/nssm-redux.svg)](https://pkg.go.dev/github.com/jonlabelle/nssm-redux)
 [![go vulnerability check](https://github.com/jonlabelle/nssm-redux/actions/workflows/govulncheck.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/govulncheck.yml)
 
+![NSSM Redux](./docs/images/nssm-redux-logo.svg)
+
 > Currently a work in progress, but early feedback is welcome! See the [compatibility notes](docs/compatibility.md) for details on the current scope and design decisions.
 
 `nssmr` is a Go port of [NSSM](https://nssm.cc), the Non-Sucking Service Manager for Windows.

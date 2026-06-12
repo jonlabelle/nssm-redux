@@ -46,6 +46,13 @@ func main() {
 		fail(err.Error())
 	}
 	cfg.ApplyDefaults(version, filepath.Base(output))
+	warnings, err := cfg.FixedVersionWarnings()
+	if err != nil {
+		fail(err.Error())
+	}
+	for _, warning := range warnings {
+		fmt.Fprintf(os.Stderr, "warning: %s\n", warning)
+	}
 
 	resourceObject, err := versioninfo.Generate(cfg, machine)
 	if err != nil {

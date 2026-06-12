@@ -1,27 +1,26 @@
 name: release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  build:
-    name: Release Windows (${{ matrix.goarch }})
+  semantic-release:
+    name: Semantic release
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        goarch:
-          - amd64
-          - arm64
 
     steps:
       - name: Check out code
         uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@main
@@ -29,40 +28,60 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Build release binary
+      - name: Set up Node.js
+        uses: actions/setup-node@main
+        with:
+          node-version: "lts/*"
+
+      - name: Install semantic-release
+        run: >-
+          npm install -g
+          semantic-release
+          @semantic-release/commit-analyzer
+          @semantic-release/exec
+          @semantic-release/git
+          @semantic-release/github
+          @semantic-release/release-notes-generator
+          @semantic-release/changelog
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          mkdir -p "dist/package/nssmr-windows-${{ matrix.goarch }}"
-          go run ./internal/tools/winbuild -source ./cmd/nssmr -out "dist/package/nssmr-windows-${{ matrix.goarch }}/nssmr.exe" -arch ${{ matrix.goarch }} -version "${GITHUB_REF_NAME}" -versioninfo ./build/windows-versioninfo.json
-          cp README.md LICENSE "dist/package/nssmr-windows-${{ matrix.goarch }}/"
-          cd dist/package
-          zip -r "../nssmr-windows-${{ matrix.goarch }}.zip" "nssmr-windows-${{ matrix.goarch }}"
+          set -o pipefail
+          npx semantic-release --ci 2>&1 | tee "$RUNNER_TEMP/release.log"
 
-      - name: Upload release artifact
-        uses: actions/upload-artifact@main
-        with:
-          name: nssmr-windows-${{ matrix.goarch }}
-          path: dist/nssmr-windows-${{ matrix.goarch }}.zip
-
-  publish:
-    name: Publish Release
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@main
-        with:
-          path: dist
-          merge-multiple: true
-
-      - name: Create checksums
+      - name: Write release summary
+        if: always()
         run: |
-          cd dist
-          sha256sum *.zip > SHA256SUMS.txt
+          if [ ! -f "$RUNNER_TEMP/release.log" ]; then
+            {
+              echo "### Release failed"
+              echo ""
+              echo "Check the job log for details."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
 
-      - name: Publish GitHub release
-        uses: softprops/action-gh-release@v3
-        with:
-          files: |
-            dist/*.zip
-            dist/SHA256SUMS.txt
+          clean=$(sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/release.log")
+          version=$(echo "$clean" | grep -oP "Published release \K\S+" || true)
+
+          if [ -n "$version" ]; then
+            {
+              echo "### Released ${version}"
+              echo ""
+              echo "GitHub release created successfully."
+            } >> "$GITHUB_STEP_SUMMARY"
+          elif echo "$clean" | grep -qi "no relevant changes"; then
+            {
+              echo "### No release"
+              echo ""
+              echo "No relevant changes were detected since the last release."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "### Release failed"
+              echo ""
+              echo "Check the job log for details."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

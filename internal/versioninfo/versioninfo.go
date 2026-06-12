@@ -236,6 +236,64 @@ func Generate(cfg Config, machine Machine) ([]byte, error) {
 	return buildCOFFObject(machine, resourceSection)
 }
 
+// FixedVersionWarnings reports fixed-version fields that will resolve to 0.0.0.0
+// because they do not contain a numeric version prefix.
+func (c Config) FixedVersionWarnings() ([]string, error) {
+	checks := []struct {
+		fixedField  string
+		fixedValue  string
+		stringField string
+		stringValue string
+		label       string
+	}{
+		{
+			fixedField:  "fixedFileVersion",
+			fixedValue:  c.FixedFileVersion,
+			stringField: "fileVersion",
+			stringValue: c.FileVersion,
+			label:       "file",
+		},
+		{
+			fixedField:  "fixedProductVersion",
+			fixedValue:  c.FixedProductVersion,
+			stringField: "productVersion",
+			stringValue: c.ProductVersion,
+			label:       "product",
+		},
+	}
+
+	var warnings []string
+	for _, check := range checks {
+		sourceField := check.stringField
+		sourceValue := check.stringValue
+		if check.fixedValue != "" {
+			sourceField = check.fixedField
+			sourceValue = check.fixedValue
+		}
+
+		sourceValue = strings.TrimSpace(sourceValue)
+		if sourceValue == "" {
+			continue
+		}
+
+		version, err := parseFixedVersion(sourceValue)
+		if err != nil {
+			return nil, fmt.Errorf("parse %s: %w", sourceField, err)
+		}
+		if version != (fixedVersion{}) || hasFixedVersionPrefix(sourceValue) {
+			continue
+		}
+
+		if check.fixedValue != "" {
+			warnings = append(warnings, fmt.Sprintf("%s %q does not contain a numeric version; Windows fixed %s version will be 0.0.0.0", check.fixedField, sourceValue, check.label))
+			continue
+		}
+		warnings = append(warnings, fmt.Sprintf("%s is empty and %s %q does not contain a numeric version; Windows fixed %s version will be 0.0.0.0", check.fixedField, check.stringField, sourceValue, check.label))
+	}
+
+	return warnings, nil
+}
+
 func buildVersionInfo(cfg Config, fileVersion, productVersion fixedVersion) ([]byte, error) {
 	fixedInfo, err := encodeFixedFileInfo(cfg, fileVersion, productVersion)
 	if err != nil {
@@ -523,6 +581,33 @@ parse:
 	}
 
 	return version, nil
+}
+
+func hasFixedVersionPrefix(value string) bool {
+	trimmed := strings.TrimSpace(value)
+	trimmed = strings.TrimPrefix(trimmed, "v")
+	trimmed = strings.TrimPrefix(trimmed, "V")
+	if trimmed == "" {
+		return false
+	}
+
+	seenDigit := false
+	seenDot := false
+	for _, r := range trimmed {
+		switch {
+		case r >= '0' && r <= '9':
+			seenDigit = true
+		case r == '.' && seenDigit:
+			seenDot = true
+		default:
+			if !seenDigit {
+				return false
+			}
+			return seenDot
+		}
+	}
+
+	return seenDigit
 }
 
 func utf16LE(value string, terminate bool) ([]byte, int, error) {

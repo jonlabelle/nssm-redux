@@ -3,6 +3,7 @@
 [![ci](https://github.com/jonlabelle/nssm-redux/actions/workflows/ci.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/ci.yml)
 [![code-ql](https://github.com/jonlabelle/nssm-redux/actions/workflows/codeql.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/codeql.yml)
 [![release](https://github.com/jonlabelle/nssm-redux/actions/workflows/release.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/release.yml)
+[![latest release](https://img.shields.io/github/v/release/jonlabelle/nssm-redux?sort=semver)](https://github.com/jonlabelle/nssm-redux/releases/latest)
 [![go reference](https://pkg.go.dev/badge/github.com/jonlabelle/nssm-redux.svg)](https://pkg.go.dev/github.com/jonlabelle/nssm-redux)
 [![go vulnerability check](https://github.com/jonlabelle/nssm-redux/actions/workflows/govulncheck.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/govulncheck.yml)
 
@@ -22,6 +23,8 @@ This repository is intentionally starting with a strong CLI and service-runtime 
 - [Build](#build)
   - [Windows hosts (PowerShell)](#windows-hosts-powershell)
   - [Unix-like hosts (`make`)](#unix-like-hosts-make)
+  - [Windows VERSIONINFO metadata](#windows-versioninfo-metadata)
+  - [Releases](#releases)
 - [Docs](#docs)
 - [Credits](#credits)
 - [License](#license)
@@ -152,6 +155,33 @@ make build-windows
 Windows cross-builds also embed VERSIONINFO metadata from [`build/windows-versioninfo.json`](build/windows-versioninfo.json). You can override that path with `make build-windows WINDOWS_VERSIONINFO=/path/to/versioninfo.json`.
 
 </details>
+
+### Windows VERSIONINFO metadata
+
+Windows release binaries include a VERSIONINFO resource generated from [`build/windows-versioninfo.json`](build/windows-versioninfo.json). The version fields split into human-readable strings and Windows fixed numeric versions:
+
+| Field                 | Purpose                                                                                                                          |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `fileVersion`         | String shown for this specific executable, `nssmr.exe`. Leave blank to use the build version.                                    |
+| `productVersion`      | String shown for the product or release line. Leave blank to use the build version.                                              |
+| `fixedFileVersion`    | Four-part numeric `VS_FIXEDFILEINFO` version for the executable, such as `1.2.3.0`. Leave blank to derive it from `fileVersion`. |
+| `fixedProductVersion` | Four-part numeric `VS_FIXEDFILEINFO` version for the product. Leave blank to derive it from `productVersion`.                    |
+
+The string fields may contain labels such as `v1.2.3`, `1.2.3-rc.1`, or a branch-oriented build name. The fixed fields are for Windows APIs and comparison tools, so they must resolve to up to four 16-bit integer components. For example, `v1.2.3` and `v1.2.3-rc.1` both derive fixed versions as `1.2.3.0`.
+
+If the fixed fields are blank and the build version has no numeric version prefix, such as `dev`, `main-43a3f89`, or a bare commit SHA, the fixed value would become `0.0.0.0`. The Windows build helper prints a warning in that case. For non-tagged builds where fixed numeric versions matter, pass a tag-like `-Version` value or set `fixedFileVersion` and `fixedProductVersion` explicitly in the VERSIONINFO JSON.
+
+### Releases
+
+Releases are managed by semantic-release on pushes to `main` after CI passes. Conventional commits determine the next version, update [`CHANGELOG.md`](CHANGELOG.md), create the `vX.Y.Z` tag, and publish the GitHub release.
+
+During the semantic-release `prepare` step, GitHub Actions runs `make release-artifacts VERSION=vX.Y.Z`. That target builds and packages:
+
+- `dist/nssmr-windows-amd64.zip`
+- `dist/nssmr-windows-arm64.zip`
+- `dist/SHA256SUMS.txt`
+
+The release zip files include `nssmr.exe`, `README.md`, `LICENSE`, and `CHANGELOG.md`. Semantic-release uploads the zip files and checksum file to the GitHub release.
 
 ## Docs
 

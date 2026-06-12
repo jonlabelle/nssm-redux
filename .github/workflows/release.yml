@@ -63,7 +63,8 @@ jobs:
             exit 0
           fi
 
-          clean=$(sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/release.log")
+          esc=$(printf '\033')
+          clean=$(sed "s/${esc}\[[0-9;]*m//g" "$RUNNER_TEMP/release.log")
           version=$(echo "$clean" | grep -oP "Published release \K\S+" || true)
 
           if [ -n "$version" ]; then

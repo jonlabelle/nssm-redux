@@ -4,9 +4,6 @@ on:
   workflow_call:
   workflow_dispatch:
 
-# default permissions to read only
-permissions: read-all
-
 jobs:
   analyze:
     name: Analyze

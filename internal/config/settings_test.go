@@ -134,3 +134,42 @@ func TestApplyReset(t *testing.T) {
 		t.Fatalf("ThrottleDelay = %v, want %v", service.ThrottleDelay, Default("svc").ThrottleDelay)
 	}
 }
+
+func TestApplyRotateBytesHighHandlesThresholdAbove4GiB(t *testing.T) {
+	t.Parallel()
+
+	service := Default("svc")
+	const low = uint64(4096)
+	const high = uint64(1)
+
+	if err := Apply(&service, SettingAppRotateBytes, "", []string{"4096"}, false); err != nil {
+		t.Fatalf("Apply(AppRotateBytes) error = %v", err)
+	}
+	if err := Apply(&service, SettingAppRotateBytesHigh, "", []string{"1"}, false); err != nil {
+		t.Fatalf("Apply(AppRotateBytesHigh) error = %v", err)
+	}
+
+	want := high<<32 | low
+	if service.Logging.SizeBytes != want {
+		t.Fatalf("SizeBytes = %d, want %d", service.Logging.SizeBytes, want)
+	}
+	if service.Logging.SizeBytes <= uint64(1)<<32 {
+		t.Fatalf("SizeBytes = %d, want threshold above 4 GiB", service.Logging.SizeBytes)
+	}
+
+	values, err := Read(service, SettingAppRotateBytes, "")
+	if err != nil {
+		t.Fatalf("Read(AppRotateBytes) error = %v", err)
+	}
+	if len(values) != 1 || values[0] != "4096" {
+		t.Fatalf("Read(AppRotateBytes) = %#v, want [4096]", values)
+	}
+
+	values, err = Read(service, SettingAppRotateBytesHigh, "")
+	if err != nil {
+		t.Fatalf("Read(AppRotateBytesHigh) error = %v", err)
+	}
+	if len(values) != 1 || values[0] != "1" {
+		t.Fatalf("Read(AppRotateBytesHigh) = %#v, want [1]", values)
+	}
+}

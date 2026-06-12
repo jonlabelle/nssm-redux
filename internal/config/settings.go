@@ -638,7 +638,7 @@ func applyRotateBytesSetting(service *Service, values []string, reset bool, high
 
 	if high {
 		service.Logging.SizeBytes &= math.MaxUint32
-		service.Logging.SizeBytes |= uint64(value) << 32
+		service.Logging.SizeBytes |= value << 32
 	} else {
 		service.Logging.SizeBytes &= ^uint64(math.MaxUint32)
 		service.Logging.SizeBytes |= value

@@ -1,0 +1,54 @@
+{
+  "branches": [
+    "main"
+  ],
+  "repositoryUrl": "https://github.com/jonlabelle/nssm-redux.git",
+  "tagFormat": "v${version}",
+  "debug": false,
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md",
+        "changelogTitle": "# Changelog"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "make release-artifacts VERSION=${nextRelease.gitTag}"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "releaseNameTemplate": "Release <%= nextRelease.gitTag %>",
+        "assets": [
+          {
+            "path": "dist/nssmr-windows-amd64.zip",
+            "label": "nssmr-windows-amd64.zip"
+          },
+          {
+            "path": "dist/nssmr-windows-arm64.zip",
+            "label": "nssmr-windows-arm64.zip"
+          },
+          {
+            "path": "dist/SHA256SUMS.txt",
+            "label": "SHA256SUMS.txt"
+          }
+        ]
+      }
+    ]
+  ]
+}

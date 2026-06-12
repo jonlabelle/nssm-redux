@@ -18,7 +18,7 @@ ifneq ($(strip $(GOMODCACHE)),)
 GOENV += GOMODCACHE=$(GOMODCACHE)
 endif
 
-.PHONY: default build build-windows build-windows-amd64 build-windows-arm64 test vet lint fmt clean help
+.PHONY: default build build-windows build-windows-amd64 build-windows-arm64 release-artifacts test vet lint fmt clean help
 
 default: help
 
@@ -35,6 +35,18 @@ build-windows-amd64: ## Build dist/nssmr-windows-amd64.exe
 build-windows-arm64: ## Build dist/nssmr-windows-arm64.exe
 	@mkdir -p "$(DIST)"
 	$(GOENV) CGO_ENABLED=0 $(GO) run ./internal/tools/winbuild -source "$(CMD)" -out "$(DIST)/$(APP)-windows-arm64.exe" -arch arm64 -version "$(VERSION)" -versioninfo "$(WINDOWS_VERSIONINFO)"
+
+release-artifacts: ## Build Windows release zip files and checksums
+	@rm -rf "$(DIST)/package" "$(DIST)"/$(APP)-windows-*.zip "$(DIST)/SHA256SUMS.txt"
+	@mkdir -p "$(DIST)/package"
+	@set -e; for arch in $(WINDOWS_ARCHES); do \
+		package="$(DIST)/package/$(APP)-windows-$$arch"; \
+		mkdir -p "$$package"; \
+		$(GOENV) CGO_ENABLED=0 $(GO) run ./internal/tools/winbuild -source "$(CMD)" -out "$$package/$(APP).exe" -arch "$$arch" -version "$(VERSION)" -versioninfo "$(WINDOWS_VERSIONINFO)"; \
+		cp README.md LICENSE CHANGELOG.md "$$package/"; \
+		( cd "$(DIST)/package" && zip -qr "../$(APP)-windows-$$arch.zip" "$(APP)-windows-$$arch" ); \
+	done
+	@( cd "$(DIST)" && sha256sum $(APP)-windows-*.zip > SHA256SUMS.txt )
 
 test: ## Run the Go test suite
 	$(GOENV) $(GO) test $(PKGS)

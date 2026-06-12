@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -156,5 +157,101 @@ func TestParseFixedVersion(t *testing.T) {
 		if got != tc.want {
 			t.Fatalf("parseFixedVersion(%q) = %#v, want %#v", tc.input, got, tc.want)
 		}
+	}
+}
+
+func TestFixedVersionWarnings(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		buildVersion  string
+		config        Config
+		wantWarnings  int
+		wantFragments []string
+	}{
+		{
+			name:         "tagged build derives numeric fixed versions",
+			buildVersion: "v1.2.3",
+		},
+		{
+			name:         "prerelease build derives numeric fixed versions",
+			buildVersion: "v1.2.3-rc.1",
+		},
+		{
+			name:         "dev build warns for file and product fixed versions",
+			buildVersion: "dev",
+			wantWarnings: 2,
+			wantFragments: []string{
+				"fixedFileVersion is empty",
+				"fileVersion \"dev\"",
+				"fixedProductVersion is empty",
+				"productVersion \"dev\"",
+				"0.0.0.0",
+			},
+		},
+		{
+			name:         "bare commit hash warns for file and product fixed versions",
+			buildVersion: "5f53228",
+			wantWarnings: 2,
+			wantFragments: []string{
+				"fileVersion \"5f53228\"",
+				"productVersion \"5f53228\"",
+			},
+		},
+		{
+			name:         "explicit fixed versions avoid dev warning",
+			buildVersion: "dev",
+			config: Config{
+				FixedFileVersion:    "0.1.0.0",
+				FixedProductVersion: "0.1.0.0",
+			},
+		},
+		{
+			name:         "explicit numeric zero is accepted",
+			buildVersion: "dev",
+			config: Config{
+				FixedFileVersion:    "0.0.0.0",
+				FixedProductVersion: "0.0.0.0",
+			},
+		},
+		{
+			name:         "explicit nonnumeric fixed version warns",
+			buildVersion: "v1.2.3",
+			config: Config{
+				FixedFileVersion: "dev",
+			},
+			wantWarnings: 1,
+			wantFragments: []string{
+				"fixedFileVersion \"dev\"",
+				"fixed file version",
+				"0.0.0.0",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			cfg := tc.config
+			cfg.ApplyDefaults(tc.buildVersion, "nssmr.exe")
+
+			warnings, err := cfg.FixedVersionWarnings()
+			if err != nil {
+				t.Fatalf("FixedVersionWarnings(): %v", err)
+			}
+			if len(warnings) != tc.wantWarnings {
+				t.Fatalf("FixedVersionWarnings() returned %d warnings, want %d: %#v", len(warnings), tc.wantWarnings, warnings)
+			}
+
+			joined := strings.Join(warnings, "\n")
+			for _, fragment := range tc.wantFragments {
+				if !strings.Contains(joined, fragment) {
+					t.Fatalf("FixedVersionWarnings() = %#v, want fragment %q", warnings, fragment)
+				}
+			}
+		})
 	}
 }

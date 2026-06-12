@@ -1,18 +1,8 @@
 name: code-ql
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - "**/*.md"
+  workflow_call:
   workflow_dispatch:
-
-# default permissions to read only
-permissions: read-all
 
 jobs:
   analyze:

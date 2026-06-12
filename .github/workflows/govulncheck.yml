@@ -1,12 +1,8 @@
 name: go vulnerability check
 
 on:
-  push:
-    branches:
-      - "main"
-  pull_request:
-    branches:
-      - "main"
+  workflow_call:
+  workflow_dispatch:
   schedule:
     - cron: "21 3 * * 0"
 

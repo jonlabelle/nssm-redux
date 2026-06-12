@@ -88,10 +88,29 @@ jobs:
           name: nssmr-windows-${{ matrix.goarch }}
           path: dist/nssmr-windows-${{ matrix.goarch }}.exe
 
+  codeql:
+    name: CodeQL analysis
+    needs: test
+    uses: ./.github/workflows/codeql.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+  govulncheck:
+    name: Go vulnerability check
+    needs: test
+    uses: ./.github/workflows/govulncheck.yml
+    permissions:
+      contents: read
+
   semantic-release:
     name: Semantic release
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
+    needs:
+      - build
+      - codeql
+      - govulncheck
     uses: ./.github/workflows/release.yml
     permissions:
       contents: write

@@ -1,4 +1,4 @@
-# nssmr (Non-Sucking Service Manager _Redux_)
+# NSSMR (Non-Sucking Service Manager _Redux_)
 
 [![ci](https://github.com/jonlabelle/nssm-redux/actions/workflows/ci.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/ci.yml)
 [![code-ql](https://github.com/jonlabelle/nssm-redux/actions/workflows/codeql.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/codeql.yml)
@@ -6,7 +6,7 @@
 [![go reference](https://pkg.go.dev/badge/github.com/jonlabelle/nssm-redux.svg)](https://pkg.go.dev/github.com/jonlabelle/nssm-redux)
 [![go vulnerability check](https://github.com/jonlabelle/nssm-redux/actions/workflows/govulncheck.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/govulncheck.yml)
 
-![NSSM Redux](./docs/images/nssm-redux-logo.svg)
+<p align="center"><img src="./docs/images/nssm-redux-logo.svg" alt="NSSM Redux" width="120" /></p>
 
 > Currently a work in progress, but early feedback is welcome! See the [compatibility notes](docs/compatibility.md) for details on the current scope and design decisions.
 

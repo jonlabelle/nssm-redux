@@ -34,7 +34,7 @@ Follow idiomatic Go practices and community standards when writing Go code. Thes
 - Avoid generic names like `util`, `common`, or `base`
 - Package names should be singular, not plural
 
-#### Package Declaration Rules (CRITICAL):
+#### Package Declaration Rules (CRITICAL)
 
 - **NEVER duplicate `package` declarations** - each Go file must have exactly ONE `package` line
 - When editing an existing `.go` file:

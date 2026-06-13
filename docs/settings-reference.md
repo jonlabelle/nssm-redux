@@ -80,25 +80,25 @@ These settings are used with `nssmr get`, `nssmr set`, and `nssmr reset`.
 - Hooks run with a 30 second timeout. `Start/Pre` exit code `99` aborts the start or restart attempt.
 - Hooks inherit the merged service environment and receive additional `NSSM_*` variables describing the current transition.
 
-| Variable                       | Meaning |
-| ------------------------------ | ------- |
-| `NSSM_SERVICE_NAME`            | Managed service name |
-| `NSSM_SERVICE_DISPLAYNAME`     | Service display name |
-| `NSSM_COMMAND_LINE`            | Managed application plus stored `AppParameters` |
-| `NSSM_APPLICATION_PID`         | Current child PID when a managed process is running |
-| `NSSM_EVENT`                   | Hook event name such as `Start`, `Stop`, or `Rotate` |
-| `NSSM_ACTION`                  | Hook action such as `Pre`, `Post`, `Change`, or `Resume` |
-| `NSSM_TRIGGER`                 | Reason the hook fired |
-| `NSSM_LAST_CONTROL`            | Most recent service control handled by the wrapper |
-| `NSSM_START_REQUESTED_COUNT`   | Number of start attempts requested |
-| `NSSM_START_COUNT`             | Number of successful child launches |
-| `NSSM_THROTTLE_COUNT`          | Number of throttle backoff windows entered |
-| `NSSM_EXIT_COUNT`              | Number of managed-process exits observed |
-| `NSSM_EXITCODE`                | Last managed-process exit code for exit-related hooks |
-| `NSSM_RUNTIME`                 | Service wrapper runtime in milliseconds |
-| `NSSM_APPLICATION_RUNTIME`     | Current or last managed-process runtime in milliseconds |
-| `NSSM_PID`                     | `nssmr service` process ID |
-| `NSSM_DEADLINE`                | Hook timeout in milliseconds |
+| Variable                     | Meaning                                                  |
+| ---------------------------- | -------------------------------------------------------- |
+| `NSSM_SERVICE_NAME`          | Managed service name                                     |
+| `NSSM_SERVICE_DISPLAYNAME`   | Service display name                                     |
+| `NSSM_COMMAND_LINE`          | Managed application plus stored `AppParameters`          |
+| `NSSM_APPLICATION_PID`       | Current child PID when a managed process is running      |
+| `NSSM_EVENT`                 | Hook event name such as `Start`, `Stop`, or `Rotate`     |
+| `NSSM_ACTION`                | Hook action such as `Pre`, `Post`, `Change`, or `Resume` |
+| `NSSM_TRIGGER`               | Reason the hook fired                                    |
+| `NSSM_LAST_CONTROL`          | Most recent service control handled by the wrapper       |
+| `NSSM_START_REQUESTED_COUNT` | Number of start attempts requested                       |
+| `NSSM_START_COUNT`           | Number of successful child launches                      |
+| `NSSM_THROTTLE_COUNT`        | Number of throttle backoff windows entered               |
+| `NSSM_EXIT_COUNT`            | Number of managed-process exits observed                 |
+| `NSSM_EXITCODE`              | Last managed-process exit code for exit-related hooks    |
+| `NSSM_RUNTIME`               | Service wrapper runtime in milliseconds                  |
+| `NSSM_APPLICATION_RUNTIME`   | Current or last managed-process runtime in milliseconds  |
+| `NSSM_PID`                   | `nssmr service` process ID                               |
+| `NSSM_DEADLINE`              | Hook timeout in milliseconds                             |
 
 - `NSSM_HOOK_VERSION`, `NSSM_EXE`, `NSSM_CONFIGURATION`, `NSSM_VERSION`, and `NSSM_BUILD_DATE` are also set for compatibility with classic NSSM hook conventions. Some values are currently placeholders in this early port.
 
@@ -115,7 +115,7 @@ These settings are used with `nssmr get`, `nssmr set`, and `nssmr reset`.
 | `AppRotateBytes`     | Unsigned 32-bit low half  | Low 32 bits of the size threshold used for startup rotation and online rollover                                                       | Default is `0`.                               | `nssmr set MyService AppRotateBytes 1073741824`       |
 | `AppRotateBytesHigh` | Unsigned 32-bit high half | High 32 bits of the size threshold. Use it for thresholds above 4 GiB.                                                                | Default is `0`.                               | `nssmr set MyService AppRotateBytesHigh 1`            |
 | `AppRotateDelay`     | Milliseconds or duration  | Sleep after renaming a log before reopening it                                                                                        | Default is `0`.                               | `nssmr set MyService AppRotateDelay 500ms`            |
-| `AppTimestampLog`    | Boolean                   | Prefixes each log line with `YYYY-MM-DD HH:MM:SS.mmm: `                                                                               | Default is `0`.                               | `nssmr set MyService AppTimestampLog 1`               |
+| `AppTimestampLog`    | Boolean                   | Prefixes each log line with `YYYY-MM-DD HH:MM:SS.mmm:`                                                                               | Default is `0`.                               | `nssmr set MyService AppTimestampLog 1`               |
 
 - `AppRotateSeconds` is checked when an existing log file is opened at service start. Runtime rotation while the service is already running is size-based.
 - Total size threshold is `AppRotateBytesHigh << 32 | AppRotateBytes`.

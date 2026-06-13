@@ -1,0 +1,14 @@
+CHANGELOG.md
+
+/.gocache
+/.gomodcache
+/.idea
+/tmp
+/dist
+
+*.go
+*.ps1
+*.mod
+*.sum
+Makefile
+LICENSE

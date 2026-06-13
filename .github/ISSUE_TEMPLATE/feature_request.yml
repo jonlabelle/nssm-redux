@@ -1,6 +1,6 @@
 name: Feature request
 description: Suggest a new capability, parity improvement, or workflow enhancement for nssmr.
-title: "[Feature]: "
+title: '[Feature]: '
 body:
   - type: markdown
     attributes:

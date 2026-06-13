@@ -1,6 +1,6 @@
 name: Documentation issue
 description: Report missing, incorrect, confusing, or outdated documentation.
-title: "[Docs]: "
+title: '[Docs]: '
 body:
   - type: markdown
     attributes:

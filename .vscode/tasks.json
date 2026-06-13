@@ -146,6 +146,89 @@
     },
 
     // ============================================================
+    // Formatting & Docs
+    // ============================================================
+    {
+      "label": "nssmr: prettier-check",
+      "type": "process",
+      "command": "npx",
+      "args": [
+        "prettier",
+        "--check",
+        ".",
+        "--config",
+        ".prettierrc.json",
+        "--ignore-path",
+        ".prettierignore"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "nssmr: prettier-format",
+      "type": "process",
+      "command": "npx",
+      "args": [
+        "prettier",
+        "--write",
+        ".",
+        "--config",
+        ".prettierrc.json",
+        "--ignore-path",
+        ".prettierignore"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "nssmr: markdownlint-cli2-check",
+      "type": "process",
+      "command": "npx",
+      "args": [
+        "markdownlint-cli2",
+        "--config",
+        ".markdownlint-cli2.jsonc",
+        "**/*.md",
+        "#.gocache",
+        "#.gomodcache",
+        "#.idea",
+        "#dist",
+        "#tmp",
+        "#**/*.go",
+        "#CHANGELOG.md",
+        "#node_modules"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "nssmr: markdownlint-cli2-fix",
+      "type": "process",
+      "command": "npx",
+      "args": [
+        "markdownlint-cli2",
+        "--config",
+        ".markdownlint-cli2.jsonc",
+        "--fix",
+        "**/*.md",
+        "#.gocache",
+        "#.gomodcache",
+        "#.idea",
+        "#dist",
+        "#tmp",
+        "#**/*.go",
+        "#CHANGELOG.md",
+        "#node_modules"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+
+    // ============================================================
     // Cleanup
     // ============================================================
     {

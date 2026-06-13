@@ -2,8 +2,7 @@
 
 [![ci](https://github.com/jonlabelle/nssm-redux/actions/workflows/ci.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/ci.yml)
 [![code-ql](https://github.com/jonlabelle/nssm-redux/actions/workflows/codeql.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/codeql.yml)
-[![release](https://github.com/jonlabelle/nssm-redux/actions/workflows/release.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/release.yml)
-[![latest release](https://img.shields.io/github/v/release/jonlabelle/nssm-redux?sort=semver)](https://github.com/jonlabelle/nssm-redux/releases/latest)
+[![version](https://img.shields.io/github/v/release/jonlabelle/nssm-redux?sort=semver&label=version&color=blue)](https://github.com/jonlabelle/nssm-redux/releases/latest)
 [![go reference](https://pkg.go.dev/badge/github.com/jonlabelle/nssm-redux.svg)](https://pkg.go.dev/github.com/jonlabelle/nssm-redux)
 [![go vulnerability check](https://github.com/jonlabelle/nssm-redux/actions/workflows/govulncheck.yml/badge.svg)](https://github.com/jonlabelle/nssm-redux/actions/workflows/govulncheck.yml)
 

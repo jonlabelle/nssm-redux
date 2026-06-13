@@ -1,6 +1,6 @@
 name: Bug report
 description: Report incorrect behavior in nssmr, its CLI, or the managed-service runtime.
-title: "[Bug]: "
+title: '[Bug]: '
 body:
   - type: markdown
     attributes:

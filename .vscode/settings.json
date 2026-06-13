@@ -32,7 +32,6 @@
   // ============================================================
   // PowerShell
   // ============================================================
-
   "[powershell]": {
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
@@ -62,9 +61,12 @@
     "covermode",
     "coverprofile",
     "DISPLAYNAME",
+    "Dnscache",
+    "elif",
     "Errorf",
     "EXITCODE",
     "failf",
+    "Filetime",
     "FIXEDFILEINFO",
     "goarch",
     "GOARCH",
@@ -84,14 +86,19 @@
     "jonlabelle",
     "LASTEXITCODE",
     "ldflags",
+    "localservice",
+    "localsystem",
     "NSSM",
     "nssmr",
     "pathpkg",
+    "pipefail",
     "PKGS",
+    "POWEREVENT",
     "predeclared",
     "Relocs",
     "rsrc",
     "slashpath",
+    "SNAPPROCESS",
     "SNAPTHREAD",
     "statuscode",
     "Struc",
@@ -100,10 +107,13 @@
     "subtests",
     "svcwrap",
     "syso",
+    "Tcpip",
     "Toolhelp",
     "trimpath",
     "unittests",
+    "unsets",
     "versioninfo",
-    "Warnf"
+    "Warnf",
+    "winbuild"
   ]
 }

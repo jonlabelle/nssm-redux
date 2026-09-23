@@ -15,7 +15,7 @@ updates:
       - 'dependabot'
       - 'gomod'
     commit-message:
-      prefix: 'deps(gomod): '
+      prefix: 'chore(deps-gomod): '
     groups:
       go-dependencies:
         patterns:
@@ -35,7 +35,7 @@ updates:
       - 'dependabot'
       - 'github-actions'
     commit-message:
-      prefix: 'deps(github-actions): '
+      prefix: 'chore(deps-github-actions): '
     groups:
       github-actions:
         patterns:

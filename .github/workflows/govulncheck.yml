@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-go@main
         with:
           go-version-file: go.mod
+          cache: false
 
       - id: govulncheck
         uses: golang/govulncheck-action@v1

@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   go-vuln-check-job:
@@ -28,3 +29,14 @@ jobs:
           # Let actions/checkout above check-out the correct SHA
           repo-checkout: false
           go-package: ./...
+          # SARIF exit code is always 0, so vulnerabilities won't fail this step;
+          # they're surfaced instead in GitHub Security > Code scanning.
+          output-format: sarif
+          output-file: govulncheck.sarif
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@main
+        with:
+          sarif_file: govulncheck.sarif
+          category: govulncheck

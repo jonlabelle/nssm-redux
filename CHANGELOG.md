@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.1.0](https://github.com/jonlabelle/nssm-redux/compare/v1.0.0...v1.1.0) (2026-09-23)
+
+
+### Features
+
+* **release:** bump patch version on go deps updates ([139b5a6](https://github.com/jonlabelle/nssm-redux/commit/139b5a6129413a4f0caf77bb7fb25ea5a307a9df))
+
 ## 1.0.0 (2026-06-12)
 
 ### Bug Fixes

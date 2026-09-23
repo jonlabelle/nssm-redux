@@ -58,7 +58,6 @@ jobs:
     needs: test
     runs-on: windows-latest
     strategy:
-      fail-fast: false
       matrix:
         goarch:
           - amd64

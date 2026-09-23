@@ -14,7 +14,6 @@ jobs:
       security-events: write
 
     strategy:
-      fail-fast: false
       matrix:
         include:
           - language: go

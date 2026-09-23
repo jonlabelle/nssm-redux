@@ -37,6 +37,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          queries: security-and-quality
 
       - name: Auto-build
         uses: github/codeql-action/autobuild@main
@@ -45,4 +46,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@main
         with:
-          category: '/language:${{matrix.language}}'
+          category: "/language:${{matrix.language}}"

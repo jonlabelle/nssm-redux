@@ -93,6 +93,7 @@ jobs:
       actions: read
       contents: read
       security-events: write
+      pull-requests: read
 
   govulncheck:
     name: Go vulnerability check
